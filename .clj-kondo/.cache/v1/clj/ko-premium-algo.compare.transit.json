@@ -1,0 +1,1 @@
+["^ ","~$same-currency?",["^ ","~:row",5,"~:col",1,"~:fixed-arities",["~#set",[2]],"~:name","^0","~:ns","~$ko-premium-algo.compare","~:top-ns","^7","~:arities",["^ ","~i2",["^ ","~:ret","~:boolean","~:arglist-str","[price1 price2]"]],"~:type","~:fn"],"~:filename","/Users/jinwook/Desktop/project/ko-premium-algo/src/ko_premium_algo/compare.clj"]
