@@ -7,27 +7,22 @@
   (seq
    (reduce (fn [acc edge] (conj acc (:start edge) (:end edge))) #{} edges)))
 
-(defn shortest-info [edges start]
-  (let [table (fn [nodes value] (reduce #(conj %1 (hash-map %2 value)) {} nodes))
-        nodes (nodes edges)
-        distance (assoc (table nodes Double/POSITIVE_INFINITY) start 1)
-        parent (table nodes nil)
-        relax (fn [distance parent]
-                (reduce
-                 (fn [[d p] edge]
-                   (let [s (:start edge) e (:end edge) w (:weight edge) d-s (get d s) d-e (get d e)]
-                     (if (< (* d-s w) d-e)
-                       [(assoc d e (* d-s w)) (assoc p e s)]
-                       [d p])))
-                 [distance parent] edges))]
-    (reduce (fn [[d p] _] (relax d p)) [distance parent] (range (count nodes)))))
+(defn optimal-exchange-info [edges]
+  (let [search (fn [short start end visited]
+                 (if (= start end) {:weight 1 :path [start]}
+                     (let [connected-edges (filter #(and (= (:end %) end) (not (contains? visited (:start %)))) edges)]
+                       (if (empty? connected-edges)
+                         {:weight Double/POSITIVE_INFINITY :path []}
+                         (let [connect-edge-from-start (fn [edge]
+                                                         (let [short-from-start (short start (:start edge) (conj visited (:start edge)))]
+                                                           {:weight (* (:weight short-from-start) (:weight edge)) :path (conj (:path short-from-start) (:end edge))}))]
+                           (reduce #(if (< (:weight %1) (:weight %2)) %1 %2) (map connect-edge-from-start connected-edges)))))))
+        memorized-search (memoize search)
+        short (fn short [start end visited] (memorized-search short start end visited))]
+    (memoize (fn [start end] (search short start end #{end})))))
 
-(defn distance [shortest-info node]
-  (get (first shortest-info) node))
+(defn exchange-rate [optimal-exchange-info]
+  (:weight optimal-exchange-info))
 
-(defn way [shortest-info node]
-  (let [parent (second shortest-info)]
-    (if (nil? (get parent node))
-      (list node)
-      (concat (way shortest-info (get parent node)) (list node)))))
-
+(defn path [optimal-exchange-info]
+  (:path optimal-exchange-info))
