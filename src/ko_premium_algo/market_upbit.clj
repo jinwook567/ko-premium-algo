@@ -26,8 +26,12 @@
        (filter #(or (= (pair/base %) coin) (= (pair/quote %) coin)))
        (map #(if (= (pair/base %) coin) (pair/quote %) (pair/base %)))))
 
+(defn normalize-pair [coin-pair]
+  (market/normalize-pair coin-pair (pairs)))
+
 (defn normalize-pairs [coin-pairs]
-  (market/normalize-pairs coin-pairs (pairs)))
+  (let [standard-pairs (pairs)]
+    (map #(market/normalize-pair % standard-pairs) coin-pairs)))
 
 (defn current-exchange-rates [coin-pairs]
   (let [normalized-pairs (normalize-pairs coin-pairs)]

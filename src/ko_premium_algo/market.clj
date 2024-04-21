@@ -10,13 +10,10 @@
 (defn pair [market-pair]
   (rest market-pair))
 
-(defn normalize-pairs [pairs standard-pairs]
-  (map
-   (fn [pair]
-     (if (some #(= pair %) standard-pairs)
-       (cons 0 pair)
-       (cons 1 (reverse pair))))
-   pairs))
+(defn normalize-pair [pair standard-pairs]
+  (if (some #(= pair %) standard-pairs)
+    (cons 0 pair)
+    (cons 1 (reverse pair))))
 
 (defn reversed-pair? [normalized-pair]
   (= (first normalized-pair) 1))

@@ -25,8 +25,12 @@
        (map #(pair/make-pair (get % "quoteAsset") (get % "baseAsset")))
        (map #(map coin/make-coin %))))
 
+(defn normalize-pair [coin-pair]
+  (market/normalize-pair coin-pair (pairs)))
+
 (defn normalize-pairs [coin-pairs]
-  (market/normalize-pairs coin-pairs (pairs)))
+  (let [standard-pairs (pairs)]
+    (map #(market/normalize-pair % standard-pairs) coin-pairs)))
 
 (defn trade-available-coins [coin]
   (->> (pairs)
