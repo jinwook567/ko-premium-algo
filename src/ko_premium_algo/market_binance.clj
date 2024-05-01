@@ -5,8 +5,9 @@
             [clojure.string :as str]
             [cheshire.core :as json]
             [ko-premium-algo.pair :as pair]
-            [ko-premium-algo.distribution :refer [distribute]]
-            ))
+            [ko-premium-algo.distribution :as distribution]
+            [ko-premium-algo.time :as time]
+            [ko-premium-algo.chart :as chart]))
 
 (defn client-get [url & req]
   (json/parse-string
@@ -41,7 +42,7 @@
   (let [normalized-pairs (normalize-pairs coin-pairs)]
     (->> normalized-pairs
          (map #(ticker-symbol (market/pair %)))
-         (distribute #(client-get "https://api.binance.com/api/v3/ticker/price"
+         (distribution/distribute #(client-get "https://api.binance.com/api/v3/ticker/price"
                                   {:query-params {"symbols" (ticker-symbols %)}}) 500)
          (map #(Double/parseDouble (get % "price")))
          (map market/normalize-rate normalized-pairs))))
@@ -58,3 +59,31 @@
 
 (defn fee [market-pair]
   (* (market/exchange-rate market-pair) 0.001))
+
+(defn candles [coin-pair interval to count]
+  (let [normalized-pair (normalize-pair coin-pair)
+        normalize-rate (partial market/normalize-rate normalized-pair)
+        duration (cond
+                   (= interval "1m") (time/make-duration 1 "m")
+                   (= interval "5m") (time/make-duration 5 "m")
+                   (= interval "30m") (time/make-duration 30 "m")
+                   (= interval "1h") (time/make-duration 1 "h")
+                   (= interval "4h") (time/make-duration 4 "h")
+                   (= interval "1d") (time/make-duration 1 "d")
+                   (= interval "1w") (time/make-duration 7 "d"))
+        duration-sum (reduce time/plus-duration (map (fn [_] duration) (range count)))
+        request (fn [limit]
+                  (client-get "https://api.binance.com/api/v3/klines"
+                              {:query-params {"symbol" (ticker-symbol (market/pair normalized-pair))
+                                              "startTime" (if (nil? to) nil (time/millis (time/minus-time to duration-sum)))
+                                              "endTime" (time/millis to) 
+                                              "interval" interval "limit" limit}}))
+        distributed-request (distribution/distribute #(apply request %) 1 (distribution/distribute-number 1000 count))]
+    (map
+     #(chart/make-candle
+       (normalize-rate (Double/parseDouble (nth % 3)))
+       (normalize-rate (Double/parseDouble (nth % 1)))
+       (normalize-rate (Double/parseDouble (nth % 4)))
+       (normalize-rate (Double/parseDouble (nth % 2)))
+       (Double/parseDouble (nth % 5)))
+     distributed-request)))
