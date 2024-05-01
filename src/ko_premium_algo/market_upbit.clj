@@ -39,9 +39,7 @@
          (map #(ticker-symbol (market/pair %)))
          (#(client-get "https://api.upbit.com/v1/ticker" {:query-params {"markets" (str/join "," %)}}))
          (map #(get % "trade_price"))
-         (map (fn [pair price]
-                (if (market/reversed-pair? pair) (/ 1 price) price))
-              normalized-pairs))))
+         (map market/normalize-rate normalized-pairs))))
 
 (defn io-status []
   (->> (client-get "https://api.upbit.com/v1/status/wallet")

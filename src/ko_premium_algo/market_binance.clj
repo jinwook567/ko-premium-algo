@@ -44,9 +44,7 @@
          (distribute #(client-get "https://api.binance.com/api/v3/ticker/price"
                                   {:query-params {"symbols" (ticker-symbols %)}}) 500)
          (map #(Double/parseDouble (get % "price")))
-         (map (fn [pair price] 
-                (if (market/reversed-pair? pair) (/ 1 price) price)) 
-              normalized-pairs))))
+         (map market/normalize-rate normalized-pairs))))
 
 (defn io-status []
   (->> (client-get "https://api.binance.com/sapi/v1/capital/config/getall")
