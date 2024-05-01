@@ -18,8 +18,10 @@
 (defn reversed-pair? [normalized-pair]
   (= (first normalized-pair) 1))
 
+(defn normalize-rate [normalized-pair rate]
+  (if (reversed-pair? normalized-pair) (/ 1 rate) rate))
+
 (defn consolidate-market-pairs [linked-market-pairs]
   (make-market-pair
    (reduce #(* %1 (exchange-rate %2)) 1 linked-market-pairs)
    (consolidate-pairs (map pair linked-market-pairs))))
-
