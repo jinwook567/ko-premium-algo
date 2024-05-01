@@ -12,8 +12,8 @@
   (json/parse-string
    (:body (apply client/get url req))))
 
-(defn ticker-symbol [base-coin quote-coin]
-  (str/join [(coin/code quote-coin) (coin/code base-coin)]))
+(defn ticker-symbol [coin-pair]
+  (str/join [(coin/code (pair/quote coin-pair)) (coin/code (pair/base coin-pair))]))
 
 (defn ticker-symbols [symbols]
   (str "[" (str/join "," (map #(str "\"" % "\"") symbols)) "]"))
@@ -40,9 +40,9 @@
 (defn current-exchange-rates [coin-pairs]
   (let [normalized-pairs (normalize-pairs coin-pairs)]
     (->> normalized-pairs
-         (map #(apply ticker-symbol (market/pair %)))
+         (map #(ticker-symbol (market/pair %)))
          (distribute #(client-get "https://api.binance.com/api/v3/ticker/price"
-                       {:query-params {"symbols" (ticker-symbols %)}}) 500)
+                                  {:query-params {"symbols" (ticker-symbols %)}}) 500)
          (map #(Double/parseDouble (get % "price")))
          (map (fn [pair price] 
                 (if (market/reversed-pair? pair) (/ 1 price) price)) 

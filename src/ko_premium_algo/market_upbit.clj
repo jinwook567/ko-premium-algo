@@ -11,8 +11,8 @@
   (json/parse-string
    (:body (apply client/get url req))))
 
-(defn ticker-symbol [base-coin quote-coin]
-  (str/join "-" [(coin/code base-coin) (coin/code quote-coin)]))
+(defn ticker-symbol [coin-pair]
+  (str/join "-" [(coin/code (pair/base coin-pair)) (coin/code (pair/quote coin-pair))]))
 
 (defn pairs []
   (->> (client-get "https://api.upbit.com/v1/market/all")
@@ -36,7 +36,7 @@
 (defn current-exchange-rates [coin-pairs]
   (let [normalized-pairs (normalize-pairs coin-pairs)]
     (->> normalized-pairs
-         (map #(apply ticker-symbol (market/pair %)))
+         (map #(ticker-symbol (market/pair %)))
          (#(client-get "https://api.upbit.com/v1/ticker" {:query-params {"markets" (str/join "," %)}}))
          (map #(get % "trade_price"))
          (map (fn [pair price]
