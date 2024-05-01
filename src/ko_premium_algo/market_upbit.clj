@@ -5,7 +5,11 @@
    [clj-http.client :as client]
    [cheshire.core :as json]
    [clojure.string :as str]
-   [ko-premium-algo.coin :as coin]))
+   [ko-premium-algo.coin :as coin]
+   [ko-premium-algo.distribution :as distribution]
+   [ko-premium-algo.time :as time]
+   [ko-premium-algo.chart :as chart]
+   ))
 
 (defn client-get [url & req]
   (json/parse-string
@@ -60,3 +64,28 @@
                (some #(= % "USDT") coin-pair) 0.0025
                :else Double/POSITIVE_INFINITY)]
     (* rate (market/exchange-rate market-pair))))
+
+
+(defn candles [coin-pair interval to count] 
+  (let [normalized-pair (normalize-pair coin-pair)
+        normalize-rate (partial market/normalize-rate normalized-pair)
+        request (fn [type limit]
+                  (client-get (str/join "/" (cons "https://api.upbit.com/v1/candles" type))
+                              {:query-params {"market" (ticker-symbol (market/pair normalized-pair)) "to" (time/iso8601 to) "count" limit}}))
+        distributed-request (fn [type] 
+                              (distribution/distribute #(request type (first %)) 1 (distribution/distribute-number 200 count)))
+        request-type (cond
+                       (= interval "1m") ["minutes" 1]
+                       (= interval "5m") ["minutes" 5]
+                       (= interval "30m") ["minutes" 30]
+                       (= interval "1h") ["minutes" 60]
+                       (= interval "4h") ["minutes" 240]
+                       (= interval "1d") ["days"]
+                       (= interval "1w") ["weeks"])]
+    (map #(chart/make-candle
+           (normalize-rate (get % "low_price"))
+           (normalize-rate (get % "opening_price"))
+           (normalize-rate (get % "trade_price"))
+           (normalize-rate (get % "high_price"))
+           (get % "candle_acc_trade_volume"))
+         (distributed-request request-type))))
