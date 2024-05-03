@@ -25,3 +25,12 @@
   (make-market-pair
    (reduce #(* %1 (exchange-rate %2)) 1 linked-market-pairs)
    (consolidate-pairs (map pair linked-market-pairs))))
+
+(defn make-exchange-info [min-qty max-qty status]
+  {:min-qty min-qty :max-qty max-qty :status status})
+
+(defn min-qty [exchange-info] (:min-qty exchange-info))
+
+(defn max-qty [exchange-info] (:max-qty exchange-info))
+
+(defn can-exchange? [exchange-info] (= (:status exchange-info) "active"))
