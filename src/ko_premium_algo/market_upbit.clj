@@ -1,19 +1,36 @@
 (ns ko-premium-algo.market-upbit
-  (:require
-   [ko-premium-algo.market :as market]
-   [ko-premium-algo.pair :as pair]
-   [clj-http.client :as client]
-   [cheshire.core :as json]
-   [clojure.string :as str]
-   [ko-premium-algo.coin :as coin]
-   [ko-premium-algo.distribution :as distribution]
-   [ko-premium-algo.time :as time]
-   [ko-premium-algo.chart :as chart]
-   ))
+  (:require [ko-premium-algo.market :as market]
+            [ko-premium-algo.pair :as pair]
+            [clj-http.client :as client]
+            [cheshire.core :as json]
+            [clojure.string :as str]
+            [ko-premium-algo.coin :as coin]
+            [ko-premium-algo.distribution :as distribution]
+            [ko-premium-algo.time :as time]
+            [ko-premium-algo.chart :as chart]
+            [buddy.core.hash :as hash]
+            [buddy.sign.jwt :as jwt]
+            [environ.core :refer [env]]))
 
-(defn client-get [url & req]
-  (json/parse-string
-   (:body (apply client/get url req))))
+(defn client-get
+  ([url] (json/parse-string (:body (client/get url))))
+  ([url req] (json/parse-string (:body (client/get url req)))))
+
+(defn token [query]
+  (-> {:access_key (env :upbit-access-key) :nonce (str (java.util.UUID/randomUUID))}
+      (merge (if (some? query)
+               {:query_hash (str/join (hash/sha512 (client/generate-query-string query)))
+                :query_hash_alg "SHA512"}
+               nil))
+      (jwt/sign (env :upbit-secret-key))
+      (#(str "Bearer " %))))
+
+(defn add-token [req type]
+  (assoc-in req [:headers :Authorization] (token ((if (= type :get) :query-params :body) req))))
+
+(defn client-get-with-secret
+  ([url] (client-get url (add-token nil :get)))
+  ([url req] (client-get url (add-token req :get))))
 
 (defn ticker-symbol [coin-pair]
   (str/join "-" [(coin/code (pair/base coin-pair)) (coin/code (pair/quote coin-pair))]))
