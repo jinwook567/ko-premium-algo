@@ -65,6 +65,18 @@
          (map #(get % "trade_price"))
          (map market/normalize-rate normalized-pairs))))
 
+(defn order-book [coin-pairs]
+  (let [normalized-pairs (normalize-pairs coin-pairs)]
+    (->> normalized-pairs
+         (map #(ticker-symbol (market/pair %)))
+         (#(client-get "https://api.upbit.com/v1/orderbook" {:query-params {"markets" (str/join "," %)}}))
+         (map #(get % "orderbook_units"))
+         (map (fn [pair units]
+                (map #(chart/make-order-book-item
+                       (market/normalize-rate pair (get % (str (side pair) "_price")))
+                       (get % (str (side pair) "_size"))) units))
+              normalized-pairs))))
+
 (defn io-status []
   (->> (client-get "https://api.upbit.com/v1/status/wallet")
        (map #(let [wallet-state (get % "wallet_state") block-state (get % "block_state")]
