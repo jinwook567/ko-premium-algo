@@ -76,15 +76,6 @@
                 (get % "network_name")
                 (or (= block-state "delayed") (= block-state "inactive")))))))
 
-(defn fee [market-pair]
-  (let [coin-pair (map coin/code (market/pair market-pair))
-        rate (cond
-               (some #(= % "KRW") coin-pair) 0.0005
-               (some #(= % "BTC") coin-pair) 0.0025
-               (some #(= % "USDT") coin-pair) 0.0025
-               :else Double/POSITIVE_INFINITY)]
-    (* rate (market/exchange-rate market-pair))))
-
 
 (defn candles [coin-pair interval to count] 
   (let [normalized-pair (normalize-pair coin-pair)

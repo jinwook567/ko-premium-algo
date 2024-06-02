@@ -57,9 +57,6 @@
                 (some #(when-not (get % "busy") %) networkList)
                 (first networkList))))))
 
-(defn fee [market-pair]
-  (* (market/exchange-rate market-pair) 0.001))
-
 (defn candles [coin-pair interval to count]
   (let [normalized-pair (normalize-pair coin-pair)
         normalize-rate (partial market/normalize-rate normalized-pair)
