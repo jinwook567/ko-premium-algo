@@ -12,3 +12,12 @@
 (defn high [candle] (:high candle))
 
 (defn volumn [candle] (:volumn candle))
+
+(defn make-order-book-item [price qty]
+  {:price price :qty qty})
+
+(defn price [order-book-item]
+  (:price order-book-item))
+
+(defn qty [order-book-item]
+  (:qty order-book-item))
