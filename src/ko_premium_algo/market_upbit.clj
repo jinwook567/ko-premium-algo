@@ -54,6 +54,9 @@
   (let [standard-pairs (pairs)]
     (map #(market/normalize-pair % standard-pairs) coin-pairs)))
 
+(defn side [normalized-pair]
+  (if (market/reversed-pair? normalized-pair) "ask" "bid"))
+
 (defn current-exchange-rates [coin-pairs]
   (let [normalized-pairs (normalize-pairs coin-pairs)]
     (->> normalized-pairs
@@ -105,4 +108,8 @@
            (normalize-rate (get % "trade_price"))
            (normalize-rate (get % "high_price"))
            (get % "candle_acc_trade_volume"))
-         (distributed-request request-type))))
+         (distributed-request request-type))))  (let [normalized-pair (normalize-pair coin-pair)]
+    (->> (ticker-symbol (market/pair normalized-pair))
+         (#(client-get-with-secret (str "https://api.upbit.com/v1/orders/chance?market=" %)))
+         (#(market/make-exchange-info (get-in % ["market" (side normalized-pair) "min_total"]) (get-in % ["market" "max_total"]) (get-in % ["market" "state"]))))))
+
