@@ -122,3 +122,17 @@
             (get-in % ["market" "state"])
             (get % (str (side normalize-pair) "_fee")))))))
 
+(defn trades [coin-pair to count]
+  (let [normalized-pair (normalize-pair coin-pair)
+        request (fn [max-count]
+                  (client-get "https://api.upbit.com/v1/trades/ticks"
+                              {:query-params {"market" (ticker-symbol (market/pair normalized-pair))
+                                              "to" (when to (time/hhmmss to))
+                                              "daysAgo" (when to (time/days (time/diff to (time/now))))
+                                              "count" max-count}}))
+        response (distribution/distribute request 1 (distribution/distribute-number 500 count))]
+    (map #(chart/make-trade
+           (market/normalize-rate normalized-pair (get % "trade_price"))
+           (get % "trade_volume")
+           (time/millis-to-time (get % "timestamp"))) 
+         response)))

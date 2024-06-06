@@ -21,3 +21,15 @@
 
 (defn qty [order-book-item]
   (:qty order-book-item))
+
+(defn make-trade [price qty time]
+  {:price price :qty qty :time time})
+
+(defn trade-price [trade]
+  (:price trade))
+
+(defn trade-qty [trade]
+  (:qty trade))
+
+(defn trade-time [trade]
+  (:time trade))
