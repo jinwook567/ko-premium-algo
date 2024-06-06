@@ -20,4 +20,4 @@
   (:price order-book-item))
 
 (defn qty [order-book-item]
-  (:qty order-book-item))
+  (:qty order-book-item))  (:qty order-book-item))
