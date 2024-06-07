@@ -32,3 +32,18 @@
 
 (defn iso8601 [time]
   (.toString time))
+
+(defn hhmmss [time]
+  (subs (iso8601 time) 11 19))
+
+(defn diff [time1 time2]
+  (Duration/between time1 time2))
+
+(defn hours [duration]
+  (.toHours duration))
+
+(defn days [duration]
+  (.toDays duration))
+
+
+
