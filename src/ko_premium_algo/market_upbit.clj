@@ -122,6 +122,14 @@
             (get-in % ["market" "state"])
             (get % (str (side normalize-pair) "_fee")))))))
 
+(defn fee [coin-pair]
+  (let [coin-code-pair (map coin/code coin-pair)]
+    (cond
+      (some #(= % "KRW") coin-code-pair) 0.0005
+      (some #(= % "BTC") coin-code-pair) 0.0025
+      (some #(= % "USDT") coin-code-pair) 0.0025
+      :else Double/POSITIVE_INFINITY)))
+
 (defn trades [coin-pair to count]
   (let [normalized-pair (normalize-pair coin-pair)
         request (fn [max-count]

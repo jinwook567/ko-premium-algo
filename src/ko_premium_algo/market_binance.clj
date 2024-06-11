@@ -84,3 +84,5 @@
        (normalize-rate (Double/parseDouble (nth % 2)))
        (Double/parseDouble (nth % 5)))
      distributed-request)))
+
+(defn fee [coin-pair] 0.001)
