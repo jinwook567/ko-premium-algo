@@ -10,3 +10,9 @@
         UIF (+ Q3 (* 1.5 IQR))]
     (fn [arg]
       (and (>= arg LIF) (<= arg UIF)))))
+
+(defn kelly-bet [success-percent profit-margin loss-margin]
+  (let [fail-percent (- 1 success-percent)]
+    (- 
+     (/ success-percent loss-margin)
+     (/ fail-percent profit-margin))))
