@@ -18,6 +18,9 @@
 (defn reversed-pair? [normalized-pair]
   (= (first normalized-pair) 1))
 
+(defn reverse-pair [market-pair]
+  (make-market-pair (/ 1 (exchange-rate market-pair)) (reverse (pair market-pair))))
+
 (defn normalize-rate [normalized-pair rate]
   (if (reversed-pair? normalized-pair) (/ 1 rate) rate))
 
