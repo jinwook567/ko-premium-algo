@@ -9,6 +9,8 @@
 
 (defn end [edge] (:end edge))
 
+(defn path [edge] (list (start edge) (end edge)))
+
 (defn optimal-route [edges, choice]
   (let [search (fn [short start-node end-node visited]
                  (let [destination-edges (filter #(and (= end-node (end %)) (not (contains? visited (start %)))) edges)
