@@ -1,4 +1,4 @@
-(ns ko-premium-algo.analyze)
+(ns ko-premium-algo.analyze.interquartile-range)
 
 (defn interquartile-range [numbers]
   (let [sorted-numbers (vec (sort numbers))
@@ -10,9 +10,3 @@
         UIF (+ Q3 (* 1.5 IQR))]
     (fn [arg]
       (and (>= arg LIF) (<= arg UIF)))))
-
-(defn kelly-bet [success-percent profit-margin loss-margin]
-  (let [fail-percent (- 1 success-percent)]
-    (- 
-     (/ success-percent loss-margin)
-     (/ fail-percent profit-margin))))
