@@ -7,7 +7,7 @@
             [ko-premium-algo.pair :as pair]
             [ko-premium-algo.distribution :as distribution]
             [ko-premium-algo.time :as time]
-            [ko-premium-algo.chart :as chart]))
+            [ko-premium-algo.chart.candle :as candle]))
 
 (defn client-get [url & req]
   (json/parse-string
@@ -77,7 +77,7 @@
                                               "interval" interval "limit" limit}}))
         distributed-request (distribution/distribute #(apply request %) 1 (distribution/distribute-number 1000 count))]
     (map
-     #(chart/make-candle
+     #(candle/make-candle
        (normalize-rate (Double/parseDouble (nth % 3)))
        (normalize-rate (Double/parseDouble (nth % 1)))
        (normalize-rate (Double/parseDouble (nth % 4)))
