@@ -1,6 +1,10 @@
 (ns ko-premium-algo.trade.intent)
 
+(def side-candidates
+  #{:bid :ask})
+
 (defn make-intent [market side qty price]
+  (assert (side-candidates side) "Invalid side")
   {:market market :qty qty :price price :side side})
 
 (defn market [intent]

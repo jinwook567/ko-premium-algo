@@ -3,7 +3,11 @@
 (defn execute-order [order-f intent]
   (order-f intent))
 
+(def state-candidates
+  #{:open :done :cancelled})
+
 (defn make-order [id intent executed-qty created-at state]
+  (assert (state-candidates state) "Invalid state")
   {:id id :intent intent :executed-qty executed-qty :created-at created-at :state state})
 
 (defn id [order]
@@ -20,7 +24,3 @@
 
 (defn state [order]
   (:state order))
-
-(def state-candidates
-  #{:open :done :cancelled})
-
