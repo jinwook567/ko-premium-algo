@@ -1,4 +1,4 @@
-(ns ko-premium-algo.range
+(ns ko-premium-algo.lib.range
   (:refer-clojure :exclude [min max]))
 
 (defn make-range [min max step]

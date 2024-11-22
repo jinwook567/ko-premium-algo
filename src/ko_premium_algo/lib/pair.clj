@@ -1,4 +1,4 @@
-(ns ko-premium-algo.pair)
+(ns ko-premium-algo.lib.pair)
 
 (defn make-pair [base quote]
   (list base quote))
@@ -13,7 +13,7 @@
   (cond
     (empty? pairs) false
     (empty? (rest pairs)) true
-    :else (and (= (ko-premium-algo.pair/quote (first pairs)) (base (second pairs))) (linked-pairs? (rest pairs)))))
+    :else (and (= (ko-premium-algo.lib.pair/quote (first pairs)) (base (second pairs))) (linked-pairs? (rest pairs)))))
 
 (defn consolidate-pairs [linked-pairs]
-  (make-pair (base (first linked-pairs)) (ko-premium-algo.pair/quote (last linked-pairs))))
+  (make-pair (base (first linked-pairs)) (ko-premium-algo.lib.pair/quote (last linked-pairs))))

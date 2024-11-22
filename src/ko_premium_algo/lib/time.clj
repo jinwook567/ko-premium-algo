@@ -1,4 +1,4 @@
-(ns ko-premium-algo.time
+(ns ko-premium-algo.lib.time
   (:import [java.time Instant]
            [java.time Duration]))
 
@@ -44,6 +44,5 @@
 
 (defn days [duration]
   (.toDays duration))
-
 
 
