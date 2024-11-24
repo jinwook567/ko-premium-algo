@@ -16,4 +16,4 @@
 (defn satisfy-step? [number step]
   (if (nil? step) 
     true 
-    (zero? (mod (/ number step) 1.0))))
+    (zero? (mod number step))))
