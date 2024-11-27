@@ -21,3 +21,6 @@
 
 (defn make-token [payload]
   (str "Bearer " (jwt/sign payload UPBIT-SECRET-KEY)))
+
+(defn make-auth-header [query]
+  {:Authorization (make-token (make-payload query))})

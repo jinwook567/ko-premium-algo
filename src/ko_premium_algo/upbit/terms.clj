@@ -18,7 +18,7 @@
 
 (defn terms [market]
   (->> (client/get "https://api.upbit.com/v1/orders/chance"
-                   {:headers {:Authorization (auth/make-token (auth/make-payload {:market (m/symbol market)}))}
+                   {:headers (auth/make-auth-header {:market (m/symbol market)})
                     :query-params {:market (m/symbol market)}})
        (#(json/parse-string (:body %)))
        (#(make-market-terms

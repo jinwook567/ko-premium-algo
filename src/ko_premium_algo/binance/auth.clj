@@ -19,5 +19,5 @@
   ([query] (let [base-payload (make-base-payload)]
              (merge query {:signature (make-signature (merge query base-payload))} base-payload))))
 
-(defn add-secret-key [header]
-  (merge header {"X-MBX-APIKEY" BINANCE-ACCESS-KEY}))
+(defn make-auth-header []
+  {"X-MBX-APIKEY" BINANCE-ACCESS-KEY})

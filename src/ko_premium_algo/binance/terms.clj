@@ -10,7 +10,7 @@
 
 (defn- fee [market]
   (->> (client/get "https://api.binance.com/sapi/v1/asset/tradeFee"
-                   {:headers (auth/add-secret-key {})
+                   {:headers (auth/make-auth-header)
                     :query-params (auth/make-payload {:symbol (m/symbol market)})})
        (#(first (json/parse-string (:body %))))
        (#(make-fee :rate (Float/parseFloat (get % "makerCommission"))))))
