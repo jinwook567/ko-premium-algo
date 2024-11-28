@@ -1,7 +1,7 @@
 (ns ko-premium-algo.upbit.candles
   (:require [clj-http.client :as client]
             [ko-premium-algo.trade.market :as m]
-            [ko-premium-algo.lib.time :refer [iso8601]]
+            [ko-premium-algo.lib.time :refer [time->iso8601]]
             [ko-premium-algo.chart.candle :refer [make-candle interval->map map->interval]]
             [ko-premium-algo.lib.partition :refer [partition-by-size]]
             [cheshire.core :as json]))
@@ -23,7 +23,7 @@
 (defn- base-candles [market interval to count]
   (->> (client/get (candle-api-path (hours-to-minutes interval))
                    {:query-params {:market (m/symbol market)
-                                   :to (iso8601 to)
+                                   :to (time->iso8601 to)
                                    :count count}})
        (#(json/parse-string (:body %)))
        (map  #(make-candle (get % "low_price")

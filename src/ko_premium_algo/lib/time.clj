@@ -2,7 +2,7 @@
   (:import [java.time Instant]
            [java.time Duration]))
 
-(defn now [] 
+(defn now []
   (Instant/now))
 
 (defn make-duration [value unit]
@@ -24,17 +24,20 @@
 (defn plus-time [time duration]
   (.plus time duration))
 
-(defn millis [time]
+(defn time->millis [time]
   (.toEpochMilli time))
 
-(defn millis-to-time [millis]
+(defn millis->time [millis]
   (Instant/ofEpochMilli millis))
 
-(defn iso8601 [time]
+(defn time->iso8601 [time]
   (.toString time))
 
-(defn hhmmss [time]
-  (subs (iso8601 time) 11 19))
+(defn iso8601->time [iso8601]
+  (Instant/parse iso8601))
+
+(defn hhmmss [iso8601]
+  (subs iso8601 11 19))
 
 (defn diff [time1 time2]
   (Duration/between time1 time2))
