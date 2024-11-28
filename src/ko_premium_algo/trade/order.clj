@@ -1,8 +1,5 @@
 (ns ko-premium-algo.trade.order)
 
-(defn execute-order [order-f intent]
-  (order-f intent))
-
 (def state-candidates
   #{:open :done :cancelled})
 
