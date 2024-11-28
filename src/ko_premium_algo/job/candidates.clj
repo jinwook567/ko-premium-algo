@@ -2,8 +2,7 @@
   (:require [ko-premium-algo.gateway.markets :refer [markets]]
             [ko-premium-algo.gateway.ticker :refer [ticker]]
             [ko-premium-algo.trade.market :refer [base-asset quote-asset]]
-            [ko-premium-algo.trade.ticker :refer [market price]]
-            ))
+            [ko-premium-algo.trade.ticker :refer [market price]]))
 
 (def black-list ["TON"])
 
@@ -35,7 +34,6 @@
   (reduce (fn [ret candidate]
             (if (> (:weight ret) (:weight candidate))
               candidate ret)) (map #(assoc % :diff  (/ (:weight %) (:base-weight %))) route)))
-
 
 (min-route (candidates :upbit "KRW" :binance "USDT"))
 (min-route (candidates :binance "USDT" :upbit "KRW"))
