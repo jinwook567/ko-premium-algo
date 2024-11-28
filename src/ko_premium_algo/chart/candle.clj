@@ -12,3 +12,5 @@
 (defn close [candle] (:close candle))
 
 (defn volumn [candle] (:volumn candle))
+
+(def interval #{:1s :1m :5m :30m :1h :1d :1w})
