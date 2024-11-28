@@ -14,3 +14,11 @@
 (defn volumn [candle] (:volumn candle))
 
 (def interval #{:1s :1m :5m :30m :1h :1d :1w})
+
+(defn interval->map [interval]
+  (let [[_ value unit] (re-matches #"(\d+)([a-zA-Z]+)" (name interval))]
+    {:value (Integer. value)
+     :unit unit}))
+
+(defn map->interval [interval-map]
+  (keyword (str (:value interval-map) (:unit interval-map))))

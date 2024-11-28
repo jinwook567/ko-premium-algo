@@ -2,17 +2,9 @@
   (:require [clj-http.client :as client]
             [ko-premium-algo.trade.market :as m]
             [ko-premium-algo.lib.time :refer [iso8601]]
-            [ko-premium-algo.chart.candle :refer [make-candle]]
+            [ko-premium-algo.chart.candle :refer [make-candle interval->map map->interval]]
             [ko-premium-algo.lib.partition :refer [partition-by-size]]
             [cheshire.core :as json]))
-
-(defn- interval->map [interval]
-  (let [[_ value unit] (re-matches #"(\d+)([a-zA-Z]+)" (name interval))]
-    {:value (Integer. value)
-     :unit unit}))
-
-(defn- map->interval [interval-map]
-  (keyword (str (:value interval-map) (:unit interval-map))))
 
 (defn- hours-to-minutes [interval]
   (let [parsed (interval->map interval)]
