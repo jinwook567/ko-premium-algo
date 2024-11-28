@@ -8,6 +8,8 @@
 (def ^:private UPBIT-SECRET-KEY (env :upbit-secret-key))
 (def ^:private UPBIT-ACCESS-KEY (env :upbit-access-key))
 
+(defn query-string [query]
+  (client/generate-query-string-with-encoding query "UTF-8" :array))
 
 (defn- make-base-payload []
   {:access_key UPBIT-ACCESS-KEY
@@ -16,7 +18,7 @@
 (defn make-payload
   ([] (make-base-payload))
   ([query] (merge (make-base-payload)
-                  {:query_hash (codecs/bytes->hex (hash/sha512 (client/generate-query-string-with-encoding query "UTF-8" :array)))
+                  {:query_hash (codecs/bytes->hex (hash/sha512 (query-string query)))
                    :query_hash_alg "SHA512"})))
 
 (defn make-token [payload]
