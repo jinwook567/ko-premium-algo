@@ -16,15 +16,9 @@
                         (conj route %)))
                (reduce choice nil))))
 
-(defn- route-weight [route weight]
-  (if (empty? route)
-    Double/POSITIVE_INFINITY
-    (reduce * (map weight route))))
+(defn- lowest-route-choice [route-weight route1 route2]
+  (min-key route-weight route1 route2))
 
-(defn- lowest-route-choice [weight route1 route2] 
-  (if (< (route-weight route1 weight) (route-weight route2 weight)) 
-    route1 route2))
-
-(defn make-lowest-weight-route-finder [edges weight]
+(defn make-lowest-weight-route-finder [edges route-weight]
   (memoize (fn [start-node end-node]
-                   (optimal-route edges start-node end-node (partial lowest-route-choice weight)))))
+             (optimal-route edges start-node end-node (partial lowest-route-choice route-weight)))))
