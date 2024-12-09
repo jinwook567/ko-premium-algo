@@ -1,4 +1,4 @@
-(ns ko-premium-algo.transfer.terms)
+(ns ko-premium-algo.wallet.terms)
 
 (defn make-terms [fee limits]
   {:fee fee :limits limits})

@@ -1,4 +1,4 @@
-(ns ko-premium-algo.transfer.limits)
+(ns ko-premium-algo.wallet.limits)
 
 (defn make-limits [qty-range actions]
   {:qty-range qty-range :actions actions})
