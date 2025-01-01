@@ -1,6 +1,5 @@
 (ns ko-premium-algo.trade.market
-  (:refer-clojure :exclude [symbol])
-  (:require [ko-premium-algo.lib.pair :refer [make-pair]]))
+  (:refer-clojure :exclude [symbol]))
 
 (defn make-market [base-asset quote-asset symbol]
   {:base-asset base-asset :quote-asset quote-asset :symbol symbol})
@@ -14,5 +13,5 @@
 (defn symbol [market]
   (:symbol market))
 
-(defn pair [market]
-  (make-pair (base-asset market) (quote-asset market)))
+(defn assets [market]
+  (list (base-asset market) (quote-asset market)))
