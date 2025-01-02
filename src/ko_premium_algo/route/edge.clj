@@ -8,3 +8,6 @@
 (defn start [edge] (:start edge))
 
 (defn end [edge] (:end edge))
+
+(defn nodes [edge]
+  #{(start edge) (end edge)})
