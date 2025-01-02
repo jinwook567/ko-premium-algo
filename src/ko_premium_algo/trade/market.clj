@@ -14,4 +14,4 @@
   (:symbol market))
 
 (defn assets [market]
-  (list (base-asset market) (quote-asset market)))
+  #{(base-asset market) (quote-asset market)})
