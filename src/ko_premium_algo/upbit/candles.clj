@@ -3,7 +3,7 @@
             [ko-premium-algo.trade.market :as m]
             [ko-premium-algo.lib.time :refer [time->iso8601]]
             [ko-premium-algo.chart.candle :refer [make-candle interval->map map->interval]]
-            [ko-premium-algo.lib.partition :refer [partition-by-size]]
+            [ko-premium-algo.lib.seq :refer [partition-by-size]]
             [cheshire.core :as json]))
 
 (defn- hours-to-minutes [interval]
