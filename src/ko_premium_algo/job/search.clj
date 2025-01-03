@@ -1,59 +1,76 @@
 (ns ko-premium-algo.job.search
-  (:require [ko-premium-algo.gateway.markets :refer [markets]]
+  (:require [ko-premium-algo.trade.market :refer [assets base-asset]]
+            [ko-premium-algo.job.edge :refer [make-ask-edge make-bid-edge make-withdraw-edge make-node]]
+            [ko-premium-algo.job.weight :refer [route-weight]]
+            [ko-premium-algo.route.edge :refer [nodes]]
+            [ko-premium-algo.route.search :refer [make-highest-weight-route-finder]]
+            [ko-premium-algo.wallet.terms :refer [fee limits]]
+            [ko-premium-algo.wallet.limits :refer [actions can-transfer?]]
+            [ko-premium-algo.trade.fee :refer [value]]
+            [ko-premium-algo.lib.seq :refer [cartesian-product]]
+            [ko-premium-algo.gateway.markets :refer [markets]]
             [ko-premium-algo.gateway.ticker :refer [ticker]]
-            [ko-premium-algo.trade.market :refer [base-asset quote-asset symbol]]
-            [ko-premium-algo.trade.ticker :refer [market price]]
-            [ko-premium-algo.route.edge :refer [make-edge weight]]
-            [ko-premium-algo.route.search :refer [make-lowest-weight-route-finder]]))
+            [ko-premium-algo.gateway.transfer :as transfer]
+            [clojure.set :refer [union]]
+            [ko-premium-algo.trade.ticker :refer [market]]))
 
-(defn- make-node [exchange asset]
-  {:exchange exchange :asset asset})
+(def assets-to-exclude #{"TON"})
 
-(defn- make-bid-edge [exchange ticker]
-  (merge {:meta {:type :bid
-                 :symbol (symbol (market ticker))}}
-         (make-edge (price ticker)
-                    (make-node exchange (base-asset (market ticker)))
-                    (make-node exchange (quote-asset (market ticker))))))
+(defn has-asset? [asset market]
+  (contains? (assets market) asset))
 
-(defn- make-ask-edge [exchange ticker]
-  (merge {:meta {:type :ask
-                 :symbol (symbol (market ticker))}}
-         (make-edge (/ 1 (price ticker))
-                    (make-node exchange (quote-asset (market ticker)))
-                    (make-node exchange (base-asset (market ticker))))))
+(defn remove-markets-with-assets [assets markets]
+  (filter #(every? (fn [asset] (not (has-asset? asset %))) assets) markets))
 
-(defn- make-withdraw-edge [base-exchange quote-exchange fee asset]
-  (merge {:meta {:type :withdraw
-                 :symbol asset}}
-         (make-edge fee
-                    (make-node base-exchange asset)
-                    (make-node quote-exchange asset))))
+(defn make-exchange-edges [exchange tickers]
+  (concat (map #(make-ask-edge exchange %) tickers)
+          (map #(make-bid-edge exchange %) tickers)))
 
-(def ^:private black-list #{"TON"})
+(defn add-method [method terms]
+  (merge {:method method} terms))
 
-(defn- exclude-black-list [markets]
-  (remove #(or (contains? black-list (base-asset %))
-               (contains? black-list (quote-asset %))) markets))
+(defn can-transfer-terms-list [base-method-terms-list quote-method-terms-list]
+  (->> (cartesian-product base-method-terms-list quote-method-terms-list)
+       (filter #(= (:method (first %)) (:method (second %))))
+       (filter #(can-transfer? (actions (limits (first %))) (actions (limits (second %)))))
+       (map first)))
 
-(defn- node-tickers [node]
-  (ticker (:exchange node)
-          (exclude-black-list (filter #(= (base-asset %) (:asset node)) (markets (:exchange node))))))
+(defn make-bridge-edge [base-exchange quote-exchange transferable-method-terms-list asset]
+  (->> transferable-method-terms-list
+       (map (fn [terms] {:fee (value (fee terms)) :method (:method terms)}))
+       (reduce #(min-key :fee %1 %2) {:fee Double/POSITIVE_INFINITY :method nil})
+       (#(make-withdraw-edge base-exchange quote-exchange (:fee %) asset (:method %)))))
 
-(defn- quote-assets [tickers]
-  (map #(quote-asset (market %)) tickers))
+(defn make-bridge-edges [base-exchange quote-exchange base-method-terms-list quote-method-terms-list asset]
+  (list (make-bridge-edge base-exchange quote-exchange (can-transfer-terms-list base-method-terms-list quote-method-terms-list) asset)
+        (make-bridge-edge quote-exchange base-exchange (can-transfer-terms-list quote-method-terms-list base-method-terms-list) asset)))
 
-;; withdraw 관련 처리 필요, weight 함수 edge가 아닌 route를 받도록 수정 필요
-(defn- calculate-weight [edge]
-  (weight edge))
+(defn make-fake-bridge-edges [base-exchange quote-exchange asset]
+  (list (make-withdraw-edge base-exchange quote-exchange 0 asset :fake)
+        (make-withdraw-edge quote-exchange base-exchange  0 asset :fake)))
 
-(defn candidate-route [base-node quote-node]
-  ((make-lowest-weight-route-finder (concat (map #(make-bid-edge (:exchange base-node) %)
-                                                 (node-tickers base-node))
-                                            (map #(make-withdraw-edge (:exchange base-node) (:exchange quote-node) 1 %)
-                                                 (quote-assets (node-tickers base-node)))
-                                            (map #(make-ask-edge (:exchange quote-node) %)
-                                                 (node-tickers quote-node)))
-                                    calculate-weight) base-node quote-node))
+(defn make-one-way-graph [base-node quote-node]
+  (let [tickers (fn [exchange] (ticker exchange (remove-markets-with-assets assets-to-exclude (markets exchange))))
+        base-tickers (filter #(= (base-asset (market %)) (:asset base-node)) (tickers (:exchange base-node)))
+        quote-tickers (filter #(= (base-asset (market %)) (:asset quote-node)) (tickers (:exchange quote-node)))
+        base-edges (make-exchange-edges (:exchange base-node) base-tickers)
+        quote-edges (make-exchange-edges (:exchange quote-node) quote-tickers)
+        method-terms-list (fn [node] (map #(add-method % (transfer/terms (:exchange node) (:asset node) %))
+                                          (transfer/methods (:exchange node) (:asset node))))
+        bridge-edges (->> [base-edges quote-edges]
+                          (map #(apply union (map nodes %)))
+                          (apply cartesian-product)
+                          (filter #(= (:asset (first %)) (:asset (second %))))
+                          (map #(make-fake-bridge-edges (:exchange base-node) (:exchange quote-node) (:asset (first %))))
+                          flatten)]
+    (concat base-edges quote-edges bridge-edges)))
 
-(candidate-route (make-node :upbit "KRW") (make-node :binance "USDT"))
+(defn find-route [base-node quote-node base-node-qty]
+  (let [finder (make-highest-weight-route-finder (make-one-way-graph base-node quote-node) (partial route-weight base-node-qty))
+        route (concat (finder base-node quote-node) (finder quote-node base-node))
+        return-qty (route-weight base-node-qty route)]
+    {:return-qty return-qty
+     :route route
+     :rate (* 100 (/ (- return-qty base-node-qty) base-node-qty))}))
+
+(find-route (make-node :upbit "KRW") (make-node :binance "USDT") 100000000)

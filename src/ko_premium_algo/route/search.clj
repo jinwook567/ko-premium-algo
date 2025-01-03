@@ -23,11 +23,10 @@
   (memoize (fn [start-node end-node]
              (optimal-route edges start-node end-node (partial lowest-route-choice route-weight)))))
 
-(defn make-lowest-weight-routes-finder [edges route-weight n]
-  (let [lowest-route-finder (make-lowest-weight-route-finder edges route-weight)]
-    (fn [start-node end-node]
-      (->> (linked-edges edges end-node end)
-           (keep #(when-let [route (lowest-route-finder start-node (start %))]
-                    (concat route (list %))))
-           (sort-by route-weight)
-           (take n)))))
+(defn- highest-route-choice [route-weight route1 route2]
+  (max-key route-weight route1 route2))
+
+(defn make-highest-weight-route-finder [edges route-weight]
+  (memoize (fn [start-node end-node]
+             (optimal-route edges start-node end-node (partial highest-route-choice route-weight)))))
+
