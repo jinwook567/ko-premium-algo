@@ -21,3 +21,6 @@
 
 (defmethod make-file-manager "json" [path]
   (system json/generate-string json/parse-string path))
+
+(defmethod make-file-manager "edn" [path]
+  (system identity read-string path))
