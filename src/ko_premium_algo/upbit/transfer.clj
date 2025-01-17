@@ -9,7 +9,9 @@
             [ko-premium-algo.wallet.intent :refer [address asset method qty make-intent]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
             [ko-premium-algo.lib.time :refer [iso8601->time]]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [clojure.core.async :refer [chan go-loop >! <! timeout]]
+            [ko-premium-algo.lib.file :refer [make-file-manager]]))
 
 (defn methods [asset]
   (->> (client/get "https://api.upbit.com/v1/status/wallet"
@@ -17,6 +19,12 @@
        (#(json/parse-string (:body %)))
        (filter #(= (get % "currency") asset))
        (map #(get % "net_type"))))
+
+(defn all-methods []
+  (->> (client/get "https://api.upbit.com/v1/status/wallet"
+                   {:headers (auth/make-auth-header)})
+       (#(json/parse-string (:body %)))
+       (map (fn [response] {:asset (get response "currency") :method (get response "net_type")}))))
 
 (defn terms [asset method]
   (->> (client/get "https://api.upbit.com/v1/withdraws/chance"
@@ -59,3 +67,21 @@
                     :query-params {:txid txid}})
        (#(json/parse-string (:body %)))
        (#(response->transfer %))))
+
+(def c (chan 3))
+
+(go-loop []
+  (go-loop [info (all-methods)]
+    (when (seq info)
+      (>! c (first info))
+      (recur (rest info))))
+  (<! (timeout (* 1000 60 60)))
+  (recur))
+
+(go-loop []
+  (let [x (<! c)
+        manager (make-file-manager ".cache/transfer.json")]
+    (manager :save (assoc (or (manager :read) {})
+                          (str (:asset x) "-" (:method x))
+                          (terms (:asset x) (:method x)))))
+  (recur))
