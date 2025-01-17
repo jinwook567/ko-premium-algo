@@ -1,16 +1,13 @@
 (ns ko-premium-algo.wallet.intent)
 
-(defn make-intent [address method asset qty]
-  {:address address  :method method :asset asset :qty qty})
+(defn make-intent [address unit qty]
+  {:address address  :unit unit :qty qty})
 
 (defn address [intent]
   (:address intent))
 
-(defn method [intent]
-  (:method intent))
-
-(defn asset [intent]
-  (:asset intent))
+(defn unit [intent]
+  (:unit intent))
 
 (defn qty [intent]
   (:qty intent))
