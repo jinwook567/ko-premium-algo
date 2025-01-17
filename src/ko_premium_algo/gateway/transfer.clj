@@ -3,13 +3,13 @@
   (:require [ko-premium-algo.upbit.transfer :as upbit]
             [ko-premium-algo.binance.transfer :as binance]))
 
-(defmulti methods (fn [type & _] type))
+(defmulti units (fn [type & _] type))
 
-(defmethod methods :upbit [_ & args]
-  (apply upbit/methods args))
+(defmethod units :upbit [_ & args]
+  (apply upbit/units args))
 
-(defmethod methods :binance [_ & args]
-  (apply binance/methods args))
+(defmethod units :binance [_ & args]
+  (apply binance/units args))
 
 (defmulti terms (fn [type & _] type))
 

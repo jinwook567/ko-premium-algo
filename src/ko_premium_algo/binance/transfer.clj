@@ -1,43 +1,51 @@
 (ns ko-premium-algo.binance.transfer
-  (:refer-clojure :exclude [methods])
   (:require [clj-http.client :as client]
             [ko-premium-algo.binance.auth :as auth]
             [ko-premium-algo.wallet.terms :refer [make-terms]]
             [ko-premium-algo.wallet.limits :refer [make-limits]]
             [ko-premium-algo.lib.range :refer [make-range]]
             [ko-premium-algo.trade.fee :refer [make-fee]]
-            [ko-premium-algo.wallet.intent :refer [address asset method qty make-intent]]
+            [ko-premium-algo.wallet.intent :refer [address qty make-intent]]
+            [ko-premium-algo.wallet.unit :refer [make-unit asset method]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
             [ko-premium-algo.lib.time :refer [millis->time]]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [clojure.string :as string]))
 
 (defn- true-keys [map]
   (into #{} (for [[k v] map :when v] k)))
 
-(defn network->terms [network]
-  (merge {:method (get network "network")}
-         (make-terms (make-fee :fixed (Float/parseFloat (get network "withdrawFee")))
-                     (make-limits (make-range (Float/parseFloat (get network "withdrawMin"))
-                                              (Float/parseFloat (get network "withdrawMax"))
-                                              (Float/parseFloat (get network "withdrawIntegerMultiple")))
-                                  (true-keys {:deposit (get network "depositEnable")
-                                              :withdraw (get network "withdrawEnable")})))))
+(defn- unit->key [unit]
+  (str (asset unit) "-" (method unit)))
 
-(defn- terms-list []
+(defn- key->unit [unit-key]
+  (let [parts (string/split unit-key #"-")]
+    (make-unit (first parts) (second parts))))
+
+(defn- network->terms [network]
+  (make-terms (make-fee :fixed (Float/parseFloat (get network "withdrawFee")))
+              (make-limits (make-range (Float/parseFloat (get network "withdrawMin"))
+                                       (Float/parseFloat (get network "withdrawMax"))
+                                       (Float/parseFloat (get network "withdrawIntegerMultiple")))
+                           (true-keys {:deposit (get network "depositEnable")
+                                       :withdraw (get network "withdrawEnable")}))))
+
+(defn- terms-info []
   (->> (client/get "https://api.binance.com/sapi/v1/capital/config/getall"
                    {:headers (auth/make-auth-header)
                     :query-params (auth/make-payload)})
        (#(json/parse-string (:body %)))
-       (mapcat #(map (fn [network] (merge (network->terms network)
-                                          {:asset (get % "coin")}))
-                     (get % "networkList")))))
+       (mapcat #(get % "networkList"))
+       (reduce #(assoc %1
+                       (unit->key (make-unit (get %2 "coin") (get %2 "network")))
+                       (network->terms %2)))))
 
-(defn methods [asset]
-  (filter #(= (:asset %) asset) (terms-list)))
+(defn units []
+  (map key->unit (keys (terms-info))))
 
-(defn terms [asset method]
-  (some #(when (and (= (:asset %) asset)
-                    (= (:method %) method)) %) (terms-list)))
+(defn terms [units]
+  (let [info (terms-info)]
+    (map #(get info (unit->key %)) units)))
 
 (defn- status [code]
   (cond
@@ -60,8 +68,8 @@
                        (get % "txid")
                        side
                        (make-intent (get % "address")
-                                    (get % "network")
-                                    (get % "coin")
+                                    (make-unit (get % "coin")
+                                               (get % "network"))
                                     (Float/parseFloat (get % "amount")))
                        (millis->time (get % "insertTime"))
                        (status (get % "status")))))
