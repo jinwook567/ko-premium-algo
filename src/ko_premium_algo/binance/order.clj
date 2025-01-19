@@ -31,21 +31,21 @@
                            (Float/parseFloat (get response "origQty"))
                            (Float/parseFloat (get response "price")))
               (Float/parseFloat (get response "executedQty"))
-              (millis->time (get response "time"))
+              (millis->time (get response "transactTime"))
               (order-state (get response "status"))))
 
 (defn execute-order [intent]
-  (let [request {:symbol (m/symbol (market intent))
-                 :side (binance-side (side intent))
-                 :type "LIMIT"
-                 :quantity (qty intent)
-                 :price (price intent)
-                 :newOrderRespType "RESULT"}]
+  (let [request  {:symbol (m/symbol (market intent))
+                  :side (binance-side (side intent))
+                  :type "LIMIT"
+                  :timeInForce "GTC"
+                  :quantity (qty intent)
+                  :price  (price intent)}]
     (->> (client/post "https://api.binance.com/api/v3/order"
-                      {:body (auth/make-payload request)
-                       :headers (auth/make-auth-header)}))
-    (#(json/parse-string (:body %)))
-    (#(response->order (market intent) %))))
+                      {:query-params (auth/make-payload request)
+                       :headers (auth/make-auth-header)})
+         (#(json/parse-string (:body %)))
+         (#(response->order (market intent) %)))))
 
 (defn open-orders [market]
   (->> (client/get "https://api.binance.com/api/v3/openOrders"
