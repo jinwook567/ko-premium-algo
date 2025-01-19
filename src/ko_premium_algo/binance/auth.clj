@@ -8,16 +8,19 @@
 (def ^:private BINANCE-SECRET-KEY (env :binance-secret-key))
 (def ^:private BINANCE-ACCESS-KEY (env :binance-access-key))
 
+(defn sort-query [query]
+  (into (sorted-map) query))
+
 (defn- make-base-payload []
   {:timestamp (time->millis (now)) :recvWindow 3000})
 
 (defn- make-signature [query]
-  (codecs/bytes->hex (hash (client/generate-query-string query) {:alg :hmac+sha256 :key BINANCE-SECRET-KEY})))
+  (codecs/bytes->hex (hash (client/generate-query-string (sort-query query)) {:alg :hmac+sha256 :key BINANCE-SECRET-KEY})))
 
 (defn make-payload
   ([] (make-payload {}))
   ([query] (let [base-payload (make-base-payload)]
-             (merge query {:signature (make-signature (merge query base-payload))} base-payload))))
+             (sort-query (merge query {:signature (make-signature (merge query base-payload))} base-payload)))))
 
 (defn make-auth-header []
   {"X-MBX-APIKEY" BINANCE-ACCESS-KEY})
