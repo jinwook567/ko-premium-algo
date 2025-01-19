@@ -19,7 +19,7 @@
   (make-order (get response "uuid")
               (make-intent market
                            (keyword (get response "side"))
-                           (Float/parseFloat (get response "volumn"))
+                           (Float/parseFloat (get response "volume"))
                            (Float/parseFloat (get response "price")))
               (Float/parseFloat (get response "executed_volume"))
               (iso8601->time (get response "created_at"))
@@ -28,11 +28,13 @@
 (defn execute-order [intent]
   (let [request {:market (m/symbol (market intent))
                  :side (side intent)
-                 :volumn (str (qty intent))
+                 :volume (str (qty intent))
                  :price (str (price intent))
                  :ord_type "limit"}]
     (->> (client/post "https://api.upbit.com/v1/orders"
-                      {:body request :headers (auth/make-auth-header request)})
+                      {:body (json/encode request)
+                       :headers (auth/make-auth-header (json/decode (json/encode request)))
+                       :content-type :json})
          (#(json/parse-string (:body %)))
          (#(response->order (market intent) %)))))
 
