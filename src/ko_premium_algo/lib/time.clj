@@ -48,4 +48,5 @@
 (defn days [duration]
   (.toDays duration))
 
-
+(defn millis [duration]
+  (.toMillis duration))
