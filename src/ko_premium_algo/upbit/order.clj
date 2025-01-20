@@ -48,16 +48,18 @@
          (map #(response->order market %)))))
 
 (defn open-orders [market]
-  (->> (iterate inc 1)
-       (map #(base-open-orders market %))
-       (take-while #(= (count %) 100))
-       (apply concat)))
+  (concat (base-open-orders market 1)
+          (->> (iterate inc 2)
+               (map #(base-open-orders market %))
+               (take-while #(= (count %) 100))
+               (apply concat))))
 
 (defn order [market id]
   (let [request {:market (m/symbol market)
-                 :uuids (auth/query-string [id])}]
+                 :uuids [id]}]
     (->> (client/get "https://api.upbit.com/v1/orders/uuids"
-                     {:query-params request}
-                     {:headers (auth/make-auth-header request)})
-         (#(json/parse-string (:body (first %))))
+                     {:query-params request
+                      :headers (auth/make-auth-header request)
+                      :multi-param-style :array})
+         (#(first (json/parse-string (:body %))))
          (#(response->order market %)))))
