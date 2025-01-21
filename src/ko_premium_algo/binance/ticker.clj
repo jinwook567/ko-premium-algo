@@ -15,4 +15,4 @@
        (map #(make-ticker %1 (Double/parseDouble (get %2 "price"))) markets)))
 
 (defn ticker [markets]
-  (flatten (pmap base-ticker (partition 400 markets))))
+  (flatten (pmap base-ticker (partition-all 400 markets))))
