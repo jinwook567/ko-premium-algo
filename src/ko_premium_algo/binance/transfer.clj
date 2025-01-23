@@ -83,7 +83,3 @@
                                                        :address (address intent)})})
        (#(json/parse-string (:body %)))
        (#(transfer :withdraw (get % "id")))))
-
-
-
-
