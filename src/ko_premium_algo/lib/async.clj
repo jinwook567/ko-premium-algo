@@ -1,5 +1,6 @@
 (ns ko-premium-algo.lib.async
-  (:require [clojure.core.async :as async :refer [go-loop <! >! chan go close!]]))
+  (:require [clojure.core.async :as async :refer [go-loop <! >! chan go close! timeout]]
+            [ko-premium-algo.lib.time :refer [millis]]))
 
 (defn- to-vec [chan]
   (async/reduce #(conj %1 %2) [] chan))
@@ -30,3 +31,16 @@
         (>! ch (<! fc)))
       (close! ch))
     (to-vec ch)))
+
+(defn poll-until [fun predicate duration]
+  (let [ch (chan 1)]
+    (go-loop []
+      (let [result (fun)]
+        (if (predicate result)
+          (do
+            (>! ch result)
+            (close! ch))
+          (do
+            (<! (timeout (millis duration)))
+            (recur)))))
+    ch))
