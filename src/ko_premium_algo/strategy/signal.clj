@@ -1,4 +1,4 @@
-(ns ko-premium-algo.job.signal)
+(ns ko-premium-algo.strategy.signal)
 
 (defn make-operation [op-type exchange intent]
   {:op-type op-type :exchange exchange :intent intent})
