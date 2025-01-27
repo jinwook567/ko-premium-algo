@@ -1,9 +1,9 @@
 (ns ko-premium-algo.strategy.execute
   (:require [ko-premium-algo.lib.async :refer [sequential concurrent poll-until]]
-            [ko-premium-algo.strategy.signal :refer [op-type exchange intent execute-type  operations]]
+            [ko-premium-algo.strategy.signal :refer [op-type exchange intent execute-type operations]]
             [ko-premium-algo.gateway.order :refer [execute-order order]]
             [ko-premium-algo.gateway.transfer :refer [execute-withdraw transfer]]
-            [ko-premium-algo.trade.order :refer [id intent state]]
+            [ko-premium-algo.trade.order :as ord]
             [ko-premium-algo.trade.intent :refer [market]]
             [ko-premium-algo.lib.time :refer [make-duration]]
             [ko-premium-algo.wallet.transfer :as trans]))
@@ -12,8 +12,8 @@
 
 (defmethod execute-operation :order [operation]
   (let [open-order (execute-order (exchange operation) (intent operation))
-        fetch-order #(order (exchange operation) (market (intent open-order)) (id open-order))
-        order-done? #(= (state %) :done)]
+        fetch-order #(order (exchange operation) (market (ord/intent open-order)) (ord/id open-order))
+        order-done? #(= (ord/state %) :done)]
     (poll-until fetch-order order-done? (make-duration 1 "s"))))
 
 (defmethod execute-operation :withdraw [operation]
@@ -22,15 +22,15 @@
         withdraw-done? #(= (trans/state %) "DONE")]
     (poll-until fetch-withdraw withdraw-done? (make-duration 1 "s"))))
 
-(defn- is-operation-seq? [operation-seq]
-  (and (some? (execute-type operation-seq))
-       (some? (operations operation-seq))))
+(defn- is-signal? [signal]
+  (and (some? (execute-type signal))
+       (some? (operations signal))))
 
 (defn execute-signal [signal]
   (->> (operations signal)
-       (map #(if (is-operation-seq? %)
-               (fn [op-seq] (execute-signal op-seq))
-               (fn [op] (execute-operation op))))
+       (map #(if (is-signal? %)
+               (partial execute-signal %)
+               (partial execute-operation %)))
        (apply (if (= (execute-type signal) :seqential)
                 sequential
                 concurrent))))
