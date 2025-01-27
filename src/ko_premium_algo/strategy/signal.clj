@@ -12,11 +12,11 @@
 (defn intent [operation]
   (:intent operation))
 
-(defn make-operation-seq [execute-type & operations]
-  {:execute-type execute-type :seq operations})
+(defn make-signal [execute-type & operations]
+  {:execute-type execute-type :operations operations})
 
-(defn execute-type [operation-seq]
-  (:execute-type operation-seq))
+(defn execute-type [signal]
+  (:execute-type signal))
 
-(defn operations [operation-seq]
-  (:seq operation-seq))
+(defn operations [signal]
+  (:operations signal))

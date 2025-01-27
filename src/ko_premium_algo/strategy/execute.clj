@@ -26,11 +26,11 @@
   (and (some? (execute-type operation-seq))
        (some? (operations operation-seq))))
 
-(defn execute-operation-seq [operation-seq]
-  (->> (operations operation-seq)
+(defn execute-signal [signal]
+  (->> (operations signal)
        (map #(if (is-operation-seq? %)
-               (fn [op-seq] (execute-operation-seq op-seq))
+               (fn [op-seq] (execute-signal op-seq))
                (fn [op] (execute-operation op))))
-       (apply (if (= (execute-type operation-seq) :seqential)
+       (apply (if (= (execute-type signal) :seqential)
                 sequential
                 concurrent))))
