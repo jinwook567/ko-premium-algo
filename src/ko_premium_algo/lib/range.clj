@@ -13,7 +13,13 @@
 (defn step [range]
   (:step range))
 
-(defn satisfy-step? [number step]
-  (if (nil? step) 
-    true 
-    (zero? (mod number step))))
+(defn satisfy-step? [n step]
+  (or (nil? step) (zero? (mod n step))))
+
+(defn satisfy-limit? [n min max]
+  (and (>= n min)
+       (<= n max)))
+
+(defn satisfy? [n range]
+  (and (satisfy-step? n (step range))
+       (satisfy-limit? n (min range) (max range))))
