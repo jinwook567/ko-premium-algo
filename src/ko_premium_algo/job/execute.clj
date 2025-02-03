@@ -1,7 +1,7 @@
 (ns ko-premium-algo.job.execute
   (:require [ko-premium-algo.trade.intent :refer [make-intent market]]
             [ko-premium-algo.trade.market :refer [make-market]]
-            [ko-premium-algo.route.edge :refer [start end weight]]
+            [ko-premium-algo.route.edge :refer [start end metadata]]
             [ko-premium-algo.wallet.intent :as wallet-intent]
             [ko-premium-algo.wallet.unit :refer [make-unit]]
             [ko-premium-algo.trade.order :refer [id intent state]]
@@ -21,17 +21,17 @@
   (make-intent (make-market (:asset (end edge))
                             (:asset (start edge))
                             (:symbol (:meta edge)))
-               (:type (:meta edge))
+               (:type (metadata edge))
                qty
-               (/ 1 (weight edge))))
+               (/ 1 (:price (metadata edge)))))
 
 (defn- bid-edge->intent [edge qty]
   (make-intent (make-market (:asset (start edge))
                             (:asset (end edge))
-                            (:symbol (:meta edge)))
-               (:type (:meta edge))
-               (/ qty (weight edge))
-               (weight edge)))
+                            (:symbol (metadata edge)))
+               (:type (metadata edge))
+               (/ qty (:price (metadata edge)))
+               (:price (metadata edge))))
 
 (defn- edge->order-intent [edge qty]
   ((if (bid-edge? edge)
@@ -40,8 +40,8 @@
 
 (defn- edge->transfer-intent [edge qty]
   (wallet-intent/make-intent "end exchange address"
-                             (make-unit (:symbol (:meta edge))
-                                        (:method (:meta edge)))
+                             (make-unit (:symbol (metadata edge))
+                                        (:method (metadata edge)))
                              qty))
 
 (defn- done-order? [exchange order-response]

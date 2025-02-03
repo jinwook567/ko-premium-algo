@@ -1,9 +1,9 @@
 (ns ko-premium-algo.route.edge)
 
-(defn make-edge [weight start end]
-  {:weight weight :start start :end end})
+(defn make-edge [meta start end]
+  {:meta meta :start start :end end})
 
-(defn weight [edge] (:weight edge))
+(defn metadata [edge] (:weight edge))
 
 (defn start [edge] (:start edge))
 

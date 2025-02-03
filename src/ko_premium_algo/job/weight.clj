@@ -1,10 +1,10 @@
 (ns ko-premium-algo.job.weight
-  (:require [ko-premium-algo.route.edge :refer [weight]]))
+  (:require [ko-premium-algo.route.edge :refer [metadata]]))
 
 (defn edge-weight [edge]
   (if (= (:type (:meta edge)) :withdraw)
-    #(- % (weight edge))
-    #(/ % (weight edge))))
+    #(- % (:price (metadata edge)))
+    #(/ % (:price (metadata edge)))))
 
 (defn route-weight [initial route]
   (if (empty? route)
