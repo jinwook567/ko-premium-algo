@@ -9,3 +9,8 @@
 
 (defn value [fee]
   (:value fee))
+
+(defn coerce-fee [fee n]
+  (if (= (type fee) :rate)
+    (* (- 1 (value fee)) n)
+    (- n (value fee))))
