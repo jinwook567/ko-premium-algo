@@ -14,7 +14,7 @@
   (:step range))
 
 (defn satisfy-step? [n step]
-  (or (nil? step) (zero? (mod n step))))
+  (zero? (mod n step)))
 
 (defn satisfy-limit? [n min max]
   (and (>= n min)
