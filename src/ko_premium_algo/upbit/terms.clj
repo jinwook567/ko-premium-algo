@@ -12,12 +12,11 @@
   (make-terms (make-fee :rate (Float/parseFloat (get response (str side "_fee"))))
               (make-limits (make-range 0 Float/POSITIVE_INFINITY 0.00000001)
                            (make-range 0 Float/POSITIVE_INFINITY
-                                       (or (some->> (get-in response ["market" side "price_unit"])
-                                                    Float/parseFloat)
-                                           Float/POSITIVE_INFINITY))
+                                       (some->> (get-in response ["market" side "price_unit"])
+                                                Float/parseFloat))
                            (make-range (Float/parseFloat (get-in response ["market" side "min_total"]))
                                        (Float/parseFloat (get-in response ["market" "max_total"]))
-                                       Float/POSITIVE_INFINITY))))
+                                       nil))))
 
 (defn terms [market]
   (->> (client/get "https://api.upbit.com/v1/orders/chance"

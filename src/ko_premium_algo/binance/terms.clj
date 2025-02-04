@@ -32,7 +32,7 @@
   (let [amount-filter (some #(when (= (get % "filterType") "NOTIONAL") %) filters)]
     (make-range (Float/parseFloat (get amount-filter "minNotional"))
                 (Float/parseFloat (get amount-filter "maxNotional"))
-                Float/POSITIVE_INFINITY)))
+                nil)))
 
 (defn- limits [market]
   (->> (client/get "https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT"
