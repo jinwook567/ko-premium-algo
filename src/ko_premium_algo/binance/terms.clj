@@ -22,6 +22,12 @@
                 (Float/parseFloat (get qty-filter "maxQty"))
                 (Float/parseFloat (get qty-filter "stepSize")))))
 
+(defn- make-price-range [filters]
+  (let [price-filter (some #(when (= (get % "filterType") "PRICE_FILTER") %) filters)]
+    (make-range (Float/parseFloat (get price-filter "minPrice"))
+                (Float/parseFloat (get price-filter "maxPrice"))
+                (Float/parseFloat (get price-filter "tickSize")))))
+
 (defn- make-amount-range [filters]
   (let [amount-filter (some #(when (= (get % "filterType") "NOTIONAL") %) filters)]
     (make-range (Float/parseFloat (get amount-filter "minNotional"))
@@ -34,7 +40,7 @@
        (#(json/parse-string (:body %)))
        (#(first (get % "symbols")))
        (#(get % "filters"))
-       (#(make-limits (make-qty-range %) (make-amount-range %)))))
+       (#(make-limits (make-qty-range %) (make-price-range %) (make-amount-range %)))))
 
 (defn terms [market]
   (make-market-terms
