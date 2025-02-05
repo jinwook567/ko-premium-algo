@@ -11,75 +11,31 @@
             [ko-premium-algo.gateway.ticker :refer [ticker]]
             [ko-premium-algo.gateway.terms :refer [terms]]
             [ko-premium-algo.gateway.transfer :as transfer]
-            [ko-premium-algo.trade.ticker :refer [market]]))
+            [ko-premium-algo.trade.ticker :refer [market]]
+            [clojure.math.combinatorics :as combo]))
 
-(def assets-to-exclude #{"TON"})
-
-(defn has-asset? [asset market]
-  (contains? (assets market) asset))
-
-(defn remove-markets-with-assets [assets markets]
-  (filter #(every? (fn [asset] (not (has-asset? asset %))) assets) markets))
-
-(defn make-order-edges [exchange markets]
+;; terms api 변경 필요
+(defn make-exchange-edges [exchange markets]
   (let [tickers (ticker exchange markets)
-        ;; terms api 변경 필요
         terms-list (terms exchange markets)]
     (concat (map #(make-ask-edge exchange %1 %2) tickers terms-list)
             (map #(make-bid-edge exchange %1 %2) tickers terms-list))))
 
-(defn make-exchange-edges [exchange tickers market-terms]
-  (concat (map #(make-ask-edge exchange %1 %2) tickers market-terms)
-          (map #(make-bid-edge exchange %1 %2) tickers market-terms)))
+(defn make-bridge-edges [base-exchange quote-exchange units]
+  (map #(make-withdraw-edge base-exchange quote-exchange %1 %2 %3)
+       (transfer/terms base-exchange units)
+       (transfer/terms quote-exchange units)
+       units))
 
-(defn can-transfer-terms? [base-terms quote-terms]
-  (and (some? base-terms)
-       (some? quote-terms)
-       (can-transfer? (actions (limits base-terms)) (actions (limits quote-terms)))))
+(defn all-bridge-edges [& exchange-list]
+  (->> (combo/permuted-combinations exchange-list 2)
+       (mapcat #(make-bridge-edges (first %) (second %) (transfer/units (first %))))))
 
-(defn make-withdraw-edges [base-exchange quote-exchange units]
-  (let [base-terms-list (transfer/terms base-exchange units)
-        quote-terms-list (transfer/terms quote-exchange units)]
-    (->> (map vector base-terms-list quote-terms-list units)
-         (filter (fn [[base-terms quote-terms _]]
-                   (can-transfer-terms? base-terms quote-terms)))
-         (map (fn [[base-terms _ unit]]
-                (make-withdraw-edge base-exchange quote-exchange base-terms unit))))))
+(defn base-asset-exchange-edges [node]
+  (->> (market (:exchange node))
+       (filter #(= (base-asset %) (:asset node)))
+       (make-exchange-edges (:exchange node))))
 
-(defn make-bridge-edges [base-exchange quote-exchange units base-terms-list quote-terms-list]
-  (->> (map vector base-terms-list quote-terms-list units)
-       (filter (fn [[base-terms quote-terms _]]
-                 (can-transfer-terms? base-terms quote-terms)))
-       (map (fn [[base-terms _ unit]]
-              (make-withdraw-edge base-exchange quote-exchange base-terms unit)))))
-
-(defn make-one-way-graph [base-node quote-node]
-  (let [tickers (fn [exchange] (ticker exchange (remove-markets-with-assets assets-to-exclude (markets exchange))))
-        base-tickers (filter #(= (base-asset (market %)) (:asset base-node)) (tickers (:exchange base-node)))
-        quote-tickers (filter #(= (base-asset (market %)) (:asset quote-node)) (tickers (:exchange quote-node)))
-        base-edges (make-exchange-edges (:exchange base-node) base-tickers)
-        quote-edges (make-exchange-edges (:exchange quote-node) quote-tickers)
-        base-units (transfer/units (:exchange base-node))
-        quote-units (transfer/units (:exchange quote-node))
-        base-bridges (make-bridge-edges (:exchange base-node)
-                                        (:exchange quote-node)
-                                        base-units
-                                        (transfer/terms (:exchange base-node) base-units)
-                                        (transfer/terms (:exchange quote-node) base-units))
-        quote-bridges (make-bridge-edges (:exchange quote-node)
-                                         (:exchange base-node)
-                                         quote-units
-                                         (transfer/terms (:exchange quote-node) quote-units)
-                                         (transfer/terms (:exchange base-node) quote-units))]
-    (concat base-edges quote-edges base-bridges quote-bridges)))
-
-
-(defn signal [base-node quote-node base-node-qty]
-  (let [finder (make-highest-weight-route-finder (make-one-way-graph base-node quote-node) (partial route-weight base-node-qty))
-        route (concat (finder base-node quote-node) (finder quote-node base-node))
-        return-qty (route-weight base-node-qty route)]
-    {:entry-qty base-node-qty
-     :return-qty return-qty
-     :route route}))
-
-(signal {:exchange :upbit :asset "KRW"} {:exchange :binance :asset "USDT"} 1000000)
+(defn base-asset-edges [& nodes]
+  (concat (mapcat base-asset-exchange-edges nodes)
+          (apply all-bridge-edges (set (map :exchange nodes)))))
