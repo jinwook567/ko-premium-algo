@@ -26,11 +26,12 @@
              (make-node exchange (quote-asset (market ticker)))
              (make-node exchange (base-asset (market ticker)))))
 
-(defn make-withdraw-edge [base-exchange quote-exchange terms unit]
+(defn make-withdraw-edge [base-exchange quote-exchange base-terms quote-terms unit]
   (make-edge {:type :withdraw
               :symbol (asset unit)
               :method (method unit)
-              :terms terms}
+              :base-terms base-terms
+              :quote-terms quote-terms}
              (make-node base-exchange (asset unit))
              (make-node quote-exchange (asset unit))))
 
