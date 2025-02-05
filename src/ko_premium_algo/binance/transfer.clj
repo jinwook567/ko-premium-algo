@@ -26,7 +26,8 @@
   (make-terms (make-fee :fixed (Float/parseFloat (get network "withdrawFee")))
               (make-limits (make-range (Float/parseFloat (get network "withdrawMin"))
                                        (Float/parseFloat (get network "withdrawMax"))
-                                       (Float/parseFloat (get network "withdrawIntegerMultiple")))
+                                       (when (= (Float/parseFloat (get network "withdrawIntegerMultiple")) 0)
+                                         (Float/parseFloat (get network "withdrawIntegerMultiple"))))
                            (true-keys {:deposit (get network "depositEnable")
                                        :withdraw (get network "withdrawEnable")}))))
 
