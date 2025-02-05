@@ -1,10 +1,12 @@
 (ns ko-premium-algo.job.weight
-  (:require [ko-premium-algo.route.edge :refer [metadata]]))
+  (:require [ko-premium-algo.route.edge :refer [metadata]]
+            [ko-premium-algo.strategy.terms :refer [withdraw-qty order-qty]]))
 
 (defn edge-weight [edge]
-  (if (= (:type (:meta edge)) :withdraw)
-    #(- % (:price (metadata edge)))
-    #(/ % (:price (metadata edge)))))
+  (let [meta (metadata edge)]
+    (if (= (:type meta) :withdraw)
+      #(withdraw-qty (:base-terms meta) (:quote-terms meta) %)
+      #(order-qty (:terms meta) (:price meta) %))))
 
 (defn route-weight [initial route]
   (if (empty? route)
