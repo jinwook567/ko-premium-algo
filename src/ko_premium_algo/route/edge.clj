@@ -3,7 +3,7 @@
 (defn make-edge [meta start end]
   {:meta meta :start start :end end})
 
-(defn metadata [edge] (:weight edge))
+(defn metadata [edge] (:meta edge))
 
 (defn start [edge] (:start edge))
 
