@@ -4,7 +4,7 @@
             [ko-premium-algo.route.edge :refer [make-edge]]
             [ko-premium-algo.trade.limits :refer [price-range]]
             [ko-premium-algo.strategy.terms :refer [coerce-range]]
-            [ko-premium-algo.trade.terms :refer [ask-terms bid-terms]]
+            [ko-premium-algo.trade.terms :refer [ask-terms bid-terms limits]]
             [ko-premium-algo.wallet.unit :refer [asset method]]))
 
 (defn make-node [exchange asset]
@@ -13,7 +13,7 @@
 (defn make-bid-edge [exchange ticker market-terms]
   (make-edge {:type :bid
               :symbol (symbol (market ticker))
-              :price (coerce-range (price-range (bid-terms market-terms)) (price ticker))
+              :price (coerce-range (price-range (limits (bid-terms market-terms))) (price ticker))
               :terms (bid-terms market-terms)}
              (make-node exchange (base-asset (market ticker)))
              (make-node exchange (quote-asset (market ticker)))))
@@ -21,7 +21,7 @@
 (defn make-ask-edge [exchange ticker market-terms]
   (make-edge {:type :ask
               :symbol (symbol (market ticker))
-              :price (coerce-range (price-range (ask-terms market-terms)) (/ 1 (price ticker)))
+              :price (coerce-range (price-range (limits (ask-terms market-terms))) (/ 1 (price ticker)))
               :terms (ask-terms market-terms)}
              (make-node exchange (quote-asset (market ticker)))
              (make-node exchange (base-asset (market ticker)))))
