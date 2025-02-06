@@ -39,7 +39,7 @@
        (mapcat #(get % "networkList"))
        (reduce #(assoc %1
                        (unit->key (make-unit (get %2 "coin") (get %2 "network")))
-                       (network->terms %2)))))
+                       (network->terms %2)) {})))
 
 (defn units []
   (map key->unit (keys (terms-info))))
