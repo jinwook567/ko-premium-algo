@@ -1,5 +1,5 @@
 (ns ko-premium-algo.job.weight
-  (:require [ko-premium-algo.route.edge :refer [metadata]]
+  (:require [ko-premium-algo.route.graph :refer [metadata]]
             [ko-premium-algo.strategy.terms :refer [withdraw-qty order-qty]]))
 
 (defn edge-weight [edge]

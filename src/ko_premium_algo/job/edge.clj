@@ -1,7 +1,7 @@
 (ns ko-premium-algo.job.edge
   (:require [ko-premium-algo.trade.market :refer [base-asset quote-asset symbol]]
             [ko-premium-algo.trade.ticker :refer [market price]]
-            [ko-premium-algo.route.edge :refer [make-edge]]
+            [ko-premium-algo.route.graph :refer [make-edge]]
             [ko-premium-algo.trade.limits :refer [price-range]]
             [ko-premium-algo.strategy.terms :refer [coerce-range]]
             [ko-premium-algo.trade.terms :refer [ask-terms bid-terms limits]]

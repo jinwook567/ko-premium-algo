@@ -1,6 +1,6 @@
 (ns ko-premium-algo.job.signal
   (:require [ko-premium-algo.strategy.signal :refer [make-operation make-signal]]
-            [ko-premium-algo.route.edge :refer [start end metadata]]
+            [ko-premium-algo.route.graph :refer [start end metadata]]
             [ko-premium-algo.trade.intent :refer [make-intent]]
             [ko-premium-algo.trade.market :refer [make-market]]
             [ko-premium-algo.wallet.intent :as wallet-intent]
