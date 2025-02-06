@@ -9,10 +9,11 @@
             [ko-premium-algo.wallet.intent :refer [address unit qty make-intent]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
             [ko-premium-algo.wallet.unit :refer [make-unit asset method]]
-            [ko-premium-algo.lib.time :refer [iso8601->time]]
+            [ko-premium-algo.lib.time :refer [iso8601->time make-duration millis]]
             [cheshire.core :as json]
-            [clojure.core.async :refer [chan go-loop >! <! timeout]]
-            [ko-premium-algo.lib.file :refer [make-file-manager]]))
+            [clojure.core.async :refer [go-loop <! timeout go]]
+            [ko-premium-algo.lib.file :refer [make-file-manager]]
+            [ko-premium-algo.lib.async :refer [sequential]]))
 
 (defn- response->transfer [response]
   (make-transfer (get response "uuid")
@@ -72,27 +73,20 @@
                                               (Math/pow 0.1 (get-in % ["withdraw_limit" "fixed"])))
                                   (set (map keyword (get-in % ["currency" "wallet_support"]))))))))
 
-(defn- produce [chan]
-  (go-loop []
-    (go-loop [rest-units (units)]
-      (when (seq rest-units)
-        (>! chan (first rest-units))
-        (recur (rest rest-units))))
-    (<! (timeout (* 1000 60 60)))
-    (recur)))
+(defn terms-map [units terms-list]
+  (->> (map #(vector (unit->key %1) %2) units terms-list)
+       (into {})))
 
-(defn- consume [chan]
-  (go-loop []
-    (let [unit (<! chan)]
-      (manager :save
-               (assoc (or (manager :read) {})
-                      (unit->key unit)
-                      (base-terms unit))))
-    (recur)))
+(defn batch []
+  (let [units (units)]
+    (go (->> units
+             (map #(fn [] (base-terms %)))
+             (apply sequential)
+             <!
+             (terms-map units)
+             (manager :save)))))
 
-(defn- init []
-  (let [c (chan 3)]
-    (produce c)
-    (consume c)))
-
-(init)
+(go-loop []
+  (<! (batch))
+  (<! (timeout (millis (make-duration 1 "h"))))
+  (recur))
