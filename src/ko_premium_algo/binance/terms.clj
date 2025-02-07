@@ -6,15 +6,20 @@
             [ko-premium-algo.lib.range :refer [make-range]]
             [ko-premium-algo.trade.terms :refer [make-market-terms make-terms]]
             [ko-premium-algo.trade.limits :refer [make-limits]]
+            [ko-premium-algo.binance.lib :refer [coll->query]]
             [cheshire.core :as json]))
 
-(defn- fee [market]
+(defn- fee-info []
   (->> (client/get "https://api.binance.com/sapi/v1/asset/tradeFee"
                    {:headers (auth/make-auth-header)
-                    :query-params (auth/make-payload {:symbol (m/symbol market)})})
-       (#(first (json/parse-string (:body %))))
-       (#(make-fee :rate (Float/parseFloat (get % "makerCommission"))))))
+                    :query-params (auth/make-payload)})
+       (#(json/parse-string (:body %)))
+       (mapcat #(vector (get % "symbol") (get % "makerCommission")))
+       (apply hash-map)))
 
+(defn- fee [markets]
+  (let [info (fee-info)]
+    (map #(make-fee :rate (Float/parseFloat (get info (m/symbol %)))) markets)))
 
 (defn- make-qty-range [filters]
   (let [qty-filter (some #(when (= (get % "filterType") "LOT_SIZE") %) filters)]
@@ -34,15 +39,15 @@
                 (Float/parseFloat (get amount-filter "maxNotional"))
                 nil)))
 
-(defn- limits [market]
-  (->> (client/get "https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT"
-                   {:query-string {"symbol" (m/symbol market)}})
+(defn- limits [markets]
+  (->> (client/get "https://api.binance.com/api/v3/exchangeInfo"
+                   {:query-params {"symbols" (coll->query (map m/symbol markets))}})
        (#(json/parse-string (:body %)))
-       (#(first (get % "symbols")))
-       (#(get % "filters"))
-       (#(make-limits (make-qty-range %) (make-price-range %) (make-amount-range %)))))
+       (#(get % "symbols"))
+       (map #(get % "filters"))
+       (map #(make-limits (make-qty-range %) (make-price-range %) (make-amount-range %)))))
 
-(defn terms [market]
-  (make-market-terms
-   (make-terms (fee market) (limits market))
-   (make-terms (fee market) (limits market))))
+(defn terms [markets]
+  (map #(make-market-terms (make-terms %1 %2) (make-terms %1 %2))
+       (fee markets)
+       (limits markets)))
