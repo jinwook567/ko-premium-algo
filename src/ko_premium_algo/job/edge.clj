@@ -21,7 +21,7 @@
 (defn make-ask-edge [exchange ticker market-terms]
   (make-edge {:type :ask
               :symbol (symbol (market ticker))
-              :price (coerce-range (price-range (limits (ask-terms market-terms))) (/ 1 (price ticker)))
+              :price (coerce-range (price-range (limits (ask-terms market-terms))) (price ticker))
               :terms (ask-terms market-terms)}
              (make-node exchange (quote-asset (market ticker)))
              (make-node exchange (base-asset (market ticker)))))

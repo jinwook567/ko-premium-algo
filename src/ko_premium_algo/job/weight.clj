@@ -4,11 +4,10 @@
 
 (defn edge-weight [edge]
   (let [meta (metadata edge)]
-    (if (= (:type meta) :withdraw)
-      #(withdraw-qty (:base-terms meta) (:quote-terms meta) %)
-      #(order-qty (:terms meta) (:price meta) %))))
+    (case (:type meta)
+      :withdraw #(withdraw-qty (:base-terms meta) (:quote-terms meta) %)
+      :bid #(order-qty (:terms meta) (:price meta) %)
+      :ask #(* (:price meta) (order-qty (:terms meta) (:price meta) (* (:price meta) %))))))
 
 (defn route-weight [initial route]
-  (if (empty? route)
-    0
-    (reduce #(%2 %1) initial (map edge-weight route))))
+  (reduce #(%2 %1) initial (map edge-weight route)))
