@@ -35,7 +35,7 @@
   (edges->graph (concat (mapcat base-asset-edges nodes)
                         (apply link-exchanges (set (map :exchange nodes))))))
 
-(defn make-finder [graph]
+(defn make-route-finder [graph]
   (fn find [base-node-qty base-node quote-node & next-destination-nodes]
     (let [op (optimal-route graph base-node quote-node (higher-choice (partial route-weight base-node-qty)))]
       (if (empty? next-destination-nodes)
