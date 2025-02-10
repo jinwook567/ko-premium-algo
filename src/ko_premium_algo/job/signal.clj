@@ -5,7 +5,9 @@
             [ko-premium-algo.trade.market :refer [make-market]]
             [ko-premium-algo.wallet.intent :as wallet-intent]
             [ko-premium-algo.wallet.unit :refer [make-unit]]
-            [ko-premium-algo.job.weight :refer [edge-weight]]))
+            [ko-premium-algo.strategy.terms :refer [order-qty withdraw-qty]]
+            [ko-premium-algo.job.traverse :refer [traverse-edge]]
+            [ko-premium-algo.lib.numeric :refer [precise]]))
 
 (defn- order-edge? [edge]
   (let [type (:type (metadata edge))]
@@ -16,15 +18,15 @@
                             (:asset (start edge))
                             (:symbol (metadata edge)))
                (:type (metadata edge))
-               qty
-               (/ 1 (metadata edge))))
+               (order-qty (:terms (metadata edge)) (:price (metadata edge)) ((precise *) (:price (metadata edge)) qty))
+               (:price (metadata edge))))
 
 (defn- bid-edge->intent [edge qty]
   (make-intent (make-market (:asset (start edge))
                             (:asset (end edge))
                             (:symbol (metadata edge)))
                (:type (metadata edge))
-               (/ qty (:price (metadata edge)))
+               (order-qty (:terms (metadata edge)) (:price (metadata edge)) qty)
                (:price (metadata edge))))
 
 (defn- edge->order [edge qty]
@@ -41,7 +43,7 @@
                    "end exchange address"
                    (make-unit (:symbol (metadata edge))
                               (:method (metadata edge)))
-                   qty)))
+                   (withdraw-qty (:base-terms (metadata edge)) (:quote-terms (metadata edge)) qty))))
 
 (defn edge->operation [edge qty]
   (if (order-edge? edge)
@@ -51,7 +53,7 @@
 (defn- route->operations [route entry-qty]
   (if (empty? route)
     '()
-    (conj (route->operations (rest route) ((edge-weight (first route)) entry-qty))
+    (conj (route->operations (rest route) (traverse-edge (first route) entry-qty))
           (edge->operation (first route) entry-qty))))
 
 (defn route->signal [route entry-qty]

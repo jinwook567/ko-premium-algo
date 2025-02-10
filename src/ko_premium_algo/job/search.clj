@@ -1,7 +1,7 @@
 (ns ko-premium-algo.job.search
   (:require [ko-premium-algo.trade.market :refer [base-asset]]
             [ko-premium-algo.job.edge :refer [make-ask-edge make-bid-edge make-withdraw-edge]]
-            [ko-premium-algo.job.weight :refer [route-weight]]
+            [ko-premium-algo.job.traverse :refer [traverse-route]]
             [ko-premium-algo.route.search :refer [higher-choice optimal-route]]
             [ko-premium-algo.route.graph :refer [edges->graph]]
             [ko-premium-algo.gateway.markets :refer [markets]]
@@ -37,11 +37,11 @@
 
 (defn make-route-finder [graph]
   (fn find [base-node-qty base-node quote-node & next-destination-nodes]
-    (let [op (optimal-route graph base-node quote-node (higher-choice (partial route-weight base-node-qty)))]
+    (let [op (optimal-route graph base-node quote-node (higher-choice (fn [route] (traverse-route route base-node-qty))))]
       (if (empty? next-destination-nodes)
         op
         (concat op (apply find
-                          (route-weight base-node-qty op)
+                          (traverse-route op base-node-qty)
                           quote-node
                           (first next-destination-nodes)
                           (rest next-destination-nodes)))))))

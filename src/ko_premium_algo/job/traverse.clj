@@ -1,0 +1,19 @@
+(ns ko-premium-algo.job.traverse
+  (:require [ko-premium-algo.route.graph :refer [metadata]]
+            [ko-premium-algo.strategy.terms :refer [withdraw-qty order-qty coerce-range]]
+            [ko-premium-algo.trade.limits :refer [amount-range]]
+            [ko-premium-algo.trade.terms :refer [limits]]
+            [ko-premium-algo.lib.numeric :refer [precise]]))
+
+(defn traverse-edge [edge value]
+  (let [meta (metadata edge)
+        multiply (precise *)]
+    (case (:type meta)
+      :withdraw (withdraw-qty (:base-terms meta) (:quote-terms meta) value)
+      :bid (order-qty (:terms meta) (:price meta) value)
+      :ask (->> (order-qty (:terms meta) (:price meta) (multiply (:price meta) value))
+                (multiply (:price meta))
+                (coerce-range (amount-range (limits (:terms meta))))))))
+
+(defn traverse-route [route value]
+  (reduce #(traverse-edge %2 %1) value route))
