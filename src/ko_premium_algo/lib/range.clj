@@ -1,5 +1,6 @@
 (ns ko-premium-algo.lib.range
-  (:refer-clojure :exclude [min max]))
+  (:refer-clojure :exclude [min max])
+  (:require [ko-premium-algo.lib.numeric :refer [precise]]))
 
 (defn make-range [min max step]
   {:min min :max max :step step})
@@ -12,10 +13,6 @@
 
 (defn step [range]
   (:step range))
-
-(defn precise [op]
-  (fn [& numbers]
-    (double (apply op (map bigdec numbers)))))
 
 (defn satisfy-step? [step n]
   (or (nil? step) (zero? ((precise mod) n step))))
