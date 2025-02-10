@@ -11,14 +11,15 @@
             [ko-premium-algo.lib.async :refer [sequential]]
             [clojure.core.async :refer [<! go go-loop timeout]]
             [ko-premium-algo.lib.time :refer [make-duration millis]]
+            [ko-premium-algo.lib.numeric :refer [str->num]]
             [cheshire.core :as json]))
 
 (defn- make-side-terms [response side]
-  (make-terms (make-fee :rate (Float/parseFloat (get response (str side "_fee"))))
+  (make-terms (make-fee :rate (str->num (get response (str side "_fee"))))
               (make-limits (make-range 0 Float/POSITIVE_INFINITY 0.00000001)
                            (make-range 0 Float/POSITIVE_INFINITY (get-in response ["market" side "price_unit"]))
-                           (make-range (Float/parseFloat (get-in response ["market" side "min_total"]))
-                                       (Float/parseFloat (get-in response ["market" "max_total"]))
+                           (make-range (str->num (get-in response ["market" side "min_total"]))
+                                       (str->num (get-in response ["market" "max_total"]))
                                        nil))))
 
 (defn base-terms [market]

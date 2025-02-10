@@ -4,6 +4,7 @@
             [ko-premium-algo.lib.time :refer [make-duration minus-time time->millis]]
             [ko-premium-algo.chart.candle :refer [make-candle interval->map]]
             [ko-premium-algo.lib.seq :refer [partition-by-size]]
+            [ko-premium-algo.lib.numeric :refer [str->num]]
             [cheshire.core :as json]))
 
 (defn- start-time [interval to count]
@@ -18,7 +19,7 @@
                                    :endTime (time->millis to)
                                    :limit count}})
        (#(json/parse-string (:body %)))
-       (map #(apply make-candle (map Float/parseFloat [(nth % 3) (nth % 2) (nth % 1) (nth % 4) (nth % 5)])))))
+       (map #(apply make-candle (map str->num [(nth % 3) (nth % 2) (nth % 1) (nth % 4) (nth % 5)])))))
 
 (defn candles [market interval to count]
   (flatten (pmap #(base-candles market interval to %) (partition-by-size count 1000))))

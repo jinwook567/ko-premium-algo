@@ -5,6 +5,7 @@
             [clj-http.client :as client]
             [ko-premium-algo.trade.market :as m]
             [ko-premium-algo.binance.auth :as auth]
+            [ko-premium-algo.lib.numeric :refer [str->num]]
             [cheshire.core :as json]))
 
 (defn- order-side [binance-side]
@@ -28,9 +29,9 @@
   (make-order (get response "orderId")
               (make-intent market
                            (order-side (get response "side"))
-                           (Float/parseFloat (get response "origQty"))
-                           (Float/parseFloat (get response "price")))
-              (Float/parseFloat (get response "executedQty"))
+                           (str->num (get response "origQty"))
+                           (str->num (get response "price")))
+              (str->num (get response "executedQty"))
               (millis->time (get response "transactTime"))
               (order-state (get response "status"))))
 

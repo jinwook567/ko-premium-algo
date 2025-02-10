@@ -7,6 +7,7 @@
             [ko-premium-algo.trade.terms :refer [make-market-terms make-terms]]
             [ko-premium-algo.trade.limits :refer [make-limits]]
             [ko-premium-algo.binance.lib :refer [coll->query]]
+            [ko-premium-algo.lib.numeric :refer [str->num]]
             [cheshire.core :as json]))
 
 (defn- fee-info []
@@ -19,24 +20,24 @@
 
 (defn- fee [markets]
   (let [info (fee-info)]
-    (map #(make-fee :rate (Float/parseFloat (get info (m/symbol %)))) markets)))
+    (map #(make-fee :rate (str->num (get info (m/symbol %)))) markets)))
 
 (defn- make-qty-range [filters]
   (let [qty-filter (some #(when (= (get % "filterType") "LOT_SIZE") %) filters)]
-    (make-range (Float/parseFloat (get qty-filter "minQty"))
-                (Float/parseFloat (get qty-filter "maxQty"))
-                (Float/parseFloat (get qty-filter "stepSize")))))
+    (make-range (str->num (get qty-filter "minQty"))
+                (str->num (get qty-filter "maxQty"))
+                (str->num (get qty-filter "stepSize")))))
 
 (defn- make-price-range [filters]
   (let [price-filter (some #(when (= (get % "filterType") "PRICE_FILTER") %) filters)]
-    (make-range (Float/parseFloat (get price-filter "minPrice"))
-                (Float/parseFloat (get price-filter "maxPrice"))
-                (Float/parseFloat (get price-filter "tickSize")))))
+    (make-range (str->num (get price-filter "minPrice"))
+                (str->num (get price-filter "maxPrice"))
+                (str->num (get price-filter "tickSize")))))
 
 (defn- make-amount-range [filters]
   (let [amount-filter (some #(when (= (get % "filterType") "NOTIONAL") %) filters)]
-    (make-range (Float/parseFloat (get amount-filter "minNotional"))
-                (Float/parseFloat (get amount-filter "maxNotional"))
+    (make-range (str->num (get amount-filter "minNotional"))
+                (str->num (get amount-filter "maxNotional"))
                 nil)))
 
 (defn- limits [markets]
