@@ -13,8 +13,12 @@
 (defn step [range]
   (:step range))
 
+(defn precise [op]
+  (fn [& numbers]
+    (double (apply op (map bigdec numbers)))))
+
 (defn satisfy-step? [step n]
-  (or (nil? step) (zero? (mod n step))))
+  (or (nil? step) (zero? ((precise mod) n step))))
 
 (defn satisfy-limit? [min max n]
   (and (>= n min)
@@ -34,5 +38,8 @@
   ([step n] (coerce-step step n true))
   ([step n floor?] (cond
                      (satisfy-step? step n) n
-                     floor? (- n (mod n step))
-                     :else (+ (coerce-step step n) step))))
+                     floor? ((precise -) n ((precise mod) n step))
+                     :else ((precise +) (coerce-step step n) step))))
+
+(defn decimal-step [n]
+  (apply / (cons 1 (map (fn [_] 10) (range n)))))
