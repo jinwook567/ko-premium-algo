@@ -4,7 +4,7 @@
             [ko-premium-algo.upbit.auth :as auth]
             [ko-premium-algo.wallet.terms :refer [make-terms]]
             [ko-premium-algo.wallet.limits :refer [make-limits]]
-            [ko-premium-algo.lib.range :refer [make-range]]
+            [ko-premium-algo.lib.range :refer [make-range decimal-step]]
             [ko-premium-algo.trade.fee :refer [make-fee]]
             [ko-premium-algo.wallet.intent :refer [address unit qty make-intent]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
@@ -70,7 +70,7 @@
        (#(make-terms (make-fee :fixed (Float/parseFloat (get-in % ["currency" "withdraw_fee"])))
                      (make-limits (make-range (Float/parseFloat (get-in % ["withdraw_limit" "minimum"]))
                                               Float/POSITIVE_INFINITY
-                                              (Math/pow 0.1 (get-in % ["withdraw_limit" "fixed"])))
+                                              (decimal-step (get-in % ["withdraw_limit" "fixed"])))
                                   (set (map keyword (get-in % ["currency" "wallet_support"]))))))))
 
 (defn terms-map [units terms-list]
