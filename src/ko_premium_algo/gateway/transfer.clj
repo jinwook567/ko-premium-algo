@@ -34,3 +34,11 @@
 
 (defmethod execute-withdraw :binance [_ & args]
   (apply binance/execute-withdraw args))
+
+(defmulti deposit-address (fn [type & _] type))
+
+(defmethod deposit-address :upbit [_ & args]
+  (apply upbit/deposit-address args))
+
+(defmethod deposit-address :binance [_ & args]
+  (apply binance/deposit-address args))
