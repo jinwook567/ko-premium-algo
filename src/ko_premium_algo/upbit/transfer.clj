@@ -2,13 +2,14 @@
   (:refer-clojure :exclude [methods])
   (:require [clj-http.client :as client]
             [ko-premium-algo.upbit.auth :as auth]
-            [ko-premium-algo.wallet.terms :refer [make-terms]]
-            [ko-premium-algo.wallet.limits :refer [make-limits]]
+            [ko-premium-algo.wallet.terms :refer [make-terms limits]]
+            [ko-premium-algo.wallet.limits :refer [make-limits actions]]
             [ko-premium-algo.lib.range :refer [make-range decimal-step]]
             [ko-premium-algo.trade.fee :refer [make-fee]]
             [ko-premium-algo.wallet.intent :refer [address unit qty make-intent]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
             [ko-premium-algo.wallet.unit :refer [make-unit asset method]]
+            [ko-premium-algo.wallet.address :refer [make-address]]
             [ko-premium-algo.lib.time :refer [iso8601->time make-duration millis]]
             [cheshire.core :as json]
             [clojure.core.async :refer [go-loop <! timeout go]]
@@ -33,8 +34,8 @@
                  :amount (qty intent)
                  :address (address intent)}]
     (->> (client/post "https://api.upbit.com/v1/withdraws/coin"
-                      {:headers (auth/make-auth-header request)
-                       :body request})
+                      {:headers (auth/make-auth-header (json/decode (json/encode request)))
+                       :body (json/encode request)})
          (#(json/parse-string (:body %)))
          (#(response->transfer %)))))
 
@@ -78,7 +79,7 @@
   (->> (map #(vector (unit->key %1) %2) units terms-list)
        (into {})))
 
-(defn batch []
+(defn batch-terms []
   (let [units (units)]
     (go (->> units
              (map #(fn [] (base-terms %)))
@@ -87,7 +88,38 @@
              (terms-map units)
              (manager :save)))))
 
+(defn- make-deposit-address [unit]
+  (let [request {:currency (asset unit) :net_type (method unit)}]
+    (->> (client/post "https://api.upbit.com/v1/deposits/generate_coin_address"
+                      {:headers (auth/make-auth-header (json/decode (json/encode request)))
+                       :body (json/encode request)
+                       :content-type :json}))))
+
+(defn deposit-address [unit]
+  (let [request {:currency (asset unit) :net_type (method unit)}]
+    (->> (client/get "https://api.upbit.com/v1/deposits/coin_address"
+                     {:headers (auth/make-auth-header request)
+                      :query-params request})
+         (#(json/parse-string (:body %)))
+         (#(make-address (get % "deposit_address") (get % "secondary_address"))))))
+
+(defn batch-deposit-address []
+  (let [units (units)]
+    (go (->> units
+             (map (fn [unit]
+                    (if (contains? (actions (limits (base-terms unit))) :deposit)
+                      (fn [] (go (make-deposit-address unit)
+                                 (<! (timeout (millis (make-duration 3 "s"))))))
+                      (fn [] "do nothing"))))
+             (apply sequential)))))
+
 (go-loop []
-  (<! (batch))
+  (<! (batch-deposit-address))
+  (<! (timeout (millis (make-duration 1 "d"))))
+  (recur))
+
+
+(go-loop []
+  (<! (batch-terms))
   (<! (timeout (millis (make-duration 1 "h"))))
   (recur))
