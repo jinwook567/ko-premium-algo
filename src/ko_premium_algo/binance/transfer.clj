@@ -5,9 +5,10 @@
             [ko-premium-algo.wallet.limits :refer [make-limits]]
             [ko-premium-algo.lib.range :refer [make-range]]
             [ko-premium-algo.trade.fee :refer [make-fee]]
-            [ko-premium-algo.wallet.intent :refer [address qty make-intent]]
+            [ko-premium-algo.wallet.intent :refer [address qty make-intent unit]]
             [ko-premium-algo.wallet.unit :refer [make-unit asset method]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
+            [ko-premium-algo.wallet.address :refer [make-address]]
             [ko-premium-algo.lib.time :refer [millis->time]]
             [ko-premium-algo.lib.numeric :refer [str->num]]
             [cheshire.core :as json]
@@ -79,9 +80,17 @@
 (defn execute-withdraw [intent]
   (->> (client/post "https://api.binance.com/sapi/v1/capital/withdraw/apply"
                     {:headers (auth/make-auth-header)
-                     :query-params (auth/make-payload {:coin (asset intent)
-                                                       :network (method intent)
+                     :query-params (auth/make-payload {:coin (asset (unit intent))
+                                                       :network (method (unit intent))
                                                        :amount (qty intent)
                                                        :address (address intent)})})
        (#(json/parse-string (:body %)))
        (#(transfer :withdraw (get % "id")))))
+
+(defn deposit-address [unit]
+  (->> (client/get "https://api.binance.com/sapi/v1/capital/deposit/address"
+                   {:headers (auth/make-auth-header)
+                    :query-params (auth/make-payload {:coin (asset unit)
+                                                      :network (method unit)})})
+       (#(json/parse-string (:body %)))
+       (#(make-address (get % "address") (get % "tag")))))
