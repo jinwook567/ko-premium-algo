@@ -9,7 +9,7 @@
             [ko-premium-algo.wallet.intent :refer [address unit qty make-intent]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
             [ko-premium-algo.wallet.unit :refer [make-unit asset method]]
-            [ko-premium-algo.wallet.address :refer [make-address]]
+            [ko-premium-algo.wallet.address :refer [make-address primary-address secondary-address]]
             [ko-premium-algo.lib.time :refer [iso8601->time make-duration millis]]
             [cheshire.core :as json]
             [clojure.core.async :refer [go-loop <! timeout go]]
@@ -29,10 +29,11 @@
                  (get response "state")))
 
 (defn execute-withdraw [intent]
-  (let [request {:currency (asset (unit intent))
-                 :net_type (method (unit intent))
-                 :amount (qty intent)
-                 :address (address intent)}]
+  (let [request (merge {:currency (asset (unit intent))
+                        :net_type (method (unit intent))
+                        :amount (qty intent)
+                        :address (primary-address (address intent))}
+                       (when-let [sa (secondary-address (address intent))] {:secondary-address sa}))]
     (->> (client/post "https://api.upbit.com/v1/withdraws/coin"
                       {:headers (auth/make-auth-header (json/decode (json/encode request)))
                        :body (json/encode request)})
@@ -117,7 +118,6 @@
   (<! (batch-deposit-address))
   (<! (timeout (millis (make-duration 1 "d"))))
   (recur))
-
 
 (go-loop []
   (<! (batch-terms))

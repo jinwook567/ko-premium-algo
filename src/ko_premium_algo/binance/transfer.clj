@@ -8,7 +8,7 @@
             [ko-premium-algo.wallet.intent :refer [address qty make-intent unit]]
             [ko-premium-algo.wallet.unit :refer [make-unit asset method]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
-            [ko-premium-algo.wallet.address :refer [make-address]]
+            [ko-premium-algo.wallet.address :refer [make-address primary-address secondary-address]]
             [ko-premium-algo.lib.time :refer [millis->time]]
             [ko-premium-algo.lib.numeric :refer [str->num]]
             [cheshire.core :as json]
@@ -80,10 +80,11 @@
 (defn execute-withdraw [intent]
   (->> (client/post "https://api.binance.com/sapi/v1/capital/withdraw/apply"
                     {:headers (auth/make-auth-header)
-                     :query-params (auth/make-payload {:coin (asset (unit intent))
-                                                       :network (method (unit intent))
-                                                       :amount (qty intent)
-                                                       :address (address intent)})})
+                     :query-params (auth/make-payload (merge {:coin (asset (unit intent))
+                                                              :network (method (unit intent))
+                                                              :amount (qty intent)
+                                                              :address (primary-address (address intent))}
+                                                             (when-let [sa (secondary-address (address intent))] {:addressTag sa})))})
        (#(json/parse-string (:body %)))
        (#(transfer :withdraw (get % "id")))))
 
@@ -93,4 +94,4 @@
                     :query-params (auth/make-payload {:coin (asset unit)
                                                       :network (method unit)})})
        (#(json/parse-string (:body %)))
-       (#(make-address (get % "address") (get % "tag")))))
+       (#(make-address (get % "address") (if (= (get % "tag") "") nil (get % "tag"))))))
