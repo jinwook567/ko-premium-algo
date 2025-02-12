@@ -69,15 +69,15 @@
                     :query-params (auth/make-payload)})
        (#(json/parse-string (:body %)))
        (some #(when (= (get % "id") id) %))
-       #(make-transfer (get % "id")
-                       (get % "txid")
-                       side
-                       (make-intent (get % "address")
-                                    (make-unit (get % "coin")
-                                               (get % "network"))
-                                    (str->num (get % "amount")))
-                       (millis->time (get % "insertTime"))
-                       (status (get % "status")))))
+       (#(make-transfer (get % "id")
+                        (get % "txId")
+                        side
+                        (make-intent (get % "address")
+                                     (make-unit (get % "coin")
+                                                (get % "network"))
+                                     (str->num (get % "amount")))
+                        (millis->time (get % "insertTime"))
+                        (status (get % "status"))))))
 
 (defn execute-withdraw [intent]
   (->> (client/post "https://api.binance.com/sapi/v1/capital/withdraw/apply"
