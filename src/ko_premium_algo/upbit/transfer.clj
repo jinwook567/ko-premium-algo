@@ -41,12 +41,12 @@
          (#(json/parse-string (:body %)))
          (#(response->transfer %)))))
 
-(defn transfer [side txid]
+(defn transfer [side id]
   (->> (client/get (if (= side :deposit)
                      "https://api.upbit.com/v1/deposit"
                      "https://api.upbit.com/v1/withdraw")
-                   {:headers (auth/make-auth-header {:txid txid})
-                    :query-params {:txid txid}})
+                   {:headers (auth/make-auth-header {:uuid id})
+                    :query-params {:uuid id}})
        (#(json/parse-string (:body %)))
        (#(response->transfer %))))
 
