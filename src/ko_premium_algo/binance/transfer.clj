@@ -1,8 +1,8 @@
 (ns ko-premium-algo.binance.transfer
   (:require [clj-http.client :as client]
             [ko-premium-algo.binance.auth :as auth]
-            [ko-premium-algo.wallet.terms :refer [make-terms]]
-            [ko-premium-algo.wallet.limits :refer [make-limits]]
+            [ko-premium-algo.wallet.terms :refer [make-terms limits]]
+            [ko-premium-algo.wallet.limits :refer [make-limits actions]]
             [ko-premium-algo.lib.range :refer [make-range]]
             [ko-premium-algo.trade.fee :refer [make-fee]]
             [ko-premium-algo.wallet.intent :refer [address qty make-intent unit]]
@@ -12,7 +12,9 @@
             [ko-premium-algo.lib.time :refer [millis->time]]
             [ko-premium-algo.lib.numeric :refer [str->num]]
             [cheshire.core :as json]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.set :refer [intersection]]
+            [ko-premium-algo.lib.file :refer [make-file-manager]]))
 
 (defn- true-keys [map]
   (into #{} (for [[k v] map :when v] k)))
@@ -95,3 +97,15 @@
                                                       :network (method unit)})})
        (#(json/parse-string (:body %)))
        (#(make-address (get % "address") (if (= (get % "tag") "") nil (get % "tag"))))))
+
+(defn make-file-for-register-address [other-exchange-units file-name]
+  (let [support-units (intersection (set other-exchange-units) (set (units)))
+        terms-list (terms support-units)]
+    (->> (map vector support-units terms-list)
+         (filter #(contains? (actions (limits (second %))) :deposit))
+         (map first)
+         (map (fn [unit] {:asset (asset unit) :network (method unit) :address (deposit-address unit)}))
+         (group-by (fn [info] [(:address info) (:network info)]))
+         (map #(vector (first %) (map :asset (second %))))
+         (into {})
+         ((make-file-manager file-name) :save))))
