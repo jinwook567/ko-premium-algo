@@ -3,7 +3,7 @@
             [ko-premium-algo.job.edge :refer [make-ask-edge make-bid-edge make-withdraw-edge]]
             [ko-premium-algo.job.traverse :refer [traverse-route]]
             [ko-premium-algo.route.search :refer [higher-choice optimal-route]]
-            [ko-premium-algo.route.graph :refer [edges->graph]]
+            [ko-premium-algo.route.graph :refer [edges->graph metadata]]
             [ko-premium-algo.gateway.markets :refer [markets]]
             [ko-premium-algo.gateway.ticker :refer [ticker]]
             [ko-premium-algo.gateway.terms :refer [terms]]
@@ -24,7 +24,8 @@
 
 (defn link-exchanges [& exchange-list]
   (->> (combo/permuted-combinations exchange-list 2)
-       (mapcat #(make-bridge-edges (first %) (second %) (transfer/units (first %))))))
+       (mapcat #(make-bridge-edges (first %) (second %) (transfer/units (first %))))
+       (filter #(some? (:base-terms (metadata %))))))
 
 (defn base-asset-edges [node]
   (->> (markets (:exchange node))
