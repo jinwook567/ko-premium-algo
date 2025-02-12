@@ -32,7 +32,7 @@
                            (str->num (get response "origQty"))
                            (str->num (get response "price")))
               (str->num (get response "executedQty"))
-              (millis->time (get response "transactTime"))
+              (millis->time (or (get response "transactTime") (get response "time")))
               (order-state (get response "status"))))
 
 (defn execute-order [intent]
@@ -57,6 +57,7 @@
 
 (defn order [market id]
   (->> (client/get "https://api.binance.com/api/v3/order"
-                   {:query-params (auth/make-payload {:symbol (m/symbol market) :orderId id})}
-                   (#(json/parse-string (:body %)))
-                   (#(response->order market %)))))
+                   {:query-params (auth/make-payload {:symbol (m/symbol market) :orderId id})
+                    :headers (auth/make-auth-header)})
+       (#(json/parse-string (:body %)))
+       (#(response->order market %))))
