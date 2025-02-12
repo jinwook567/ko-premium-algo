@@ -36,7 +36,8 @@
                        (when-let [sa (secondary-address (address intent))] {:secondary-address sa}))]
     (->> (client/post "https://api.upbit.com/v1/withdraws/coin"
                       {:headers (auth/make-auth-header (json/decode (json/encode request)))
-                       :body (json/encode request)})
+                       :body (json/encode request)
+                       :content-type :json})
          (#(json/parse-string (:body %)))
          (#(response->transfer %)))))
 
