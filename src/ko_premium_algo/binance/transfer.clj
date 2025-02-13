@@ -61,23 +61,26 @@
     (= code 1) "CANCELLED"
     (= code 3) "REJECTED"))
 
-(defn transfer [side id]
-  (->> (client/get (if (= side :deposit)
-                     "https://api.binance.com/sapi/v1/capital/deposit/hisrec"
-                     "https://api.binance.com/sapi/v1/capital/withdraw/history")
-                   {:headers (auth/make-auth-header)
-                    :query-params (auth/make-payload)})
-       (#(json/parse-string (:body %)))
-       (some #(when (= (get % "id") id) %))
-       (#(make-transfer (get % "id")
-                        (get % "txId")
-                        side
-                        (make-intent (get % "address")
-                                     (make-unit (get % "coin")
-                                                (get % "network"))
-                                     (str->num (get % "amount")))
-                        (millis->time (get % "insertTime"))
-                        (status (get % "status"))))))
+(defn transfer [side id-type id]
+  (let [response-property (case id-type
+                            :id "id"
+                            :txid "txId")]
+    (->> (client/get (if (= side :deposit)
+                       "https://api.binance.com/sapi/v1/capital/deposit/hisrec"
+                       "https://api.binance.com/sapi/v1/capital/withdraw/history")
+                     {:headers (auth/make-auth-header)
+                      :query-params (auth/make-payload)})
+         (#(json/parse-string (:body %)))
+         (some #(when (= (get % response-property) id) %))
+         (#(make-transfer (get % "id")
+                          (get % "txId")
+                          side
+                          (make-intent (get % "address")
+                                       (make-unit (get % "coin")
+                                                  (get % "network"))
+                                       (str->num (get % "amount")))
+                          (millis->time (get % "insertTime"))
+                          (status (get % "status")))))))
 
 (defn execute-withdraw [intent]
   (->> (client/post "https://api.binance.com/sapi/v1/capital/withdraw/apply"
@@ -88,7 +91,7 @@
                                                               :address (primary-address (address intent))}
                                                              (when-let [sa (secondary-address (address intent))] {:addressTag sa})))})
        (#(json/parse-string (:body %)))
-       (#(transfer :withdraw (get % "id")))))
+       (#(transfer :withdraw :id (get % "id")))))
 
 (defn deposit-address [unit]
   (->> (client/get "https://api.binance.com/sapi/v1/capital/deposit/address"
