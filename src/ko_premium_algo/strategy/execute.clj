@@ -6,7 +6,8 @@
             [ko-premium-algo.trade.order :as ord]
             [ko-premium-algo.trade.intent :refer [market]]
             [ko-premium-algo.lib.time :refer [make-duration]]
-            [ko-premium-algo.wallet.transfer :as trans]))
+            [ko-premium-algo.wallet.transfer :as trans]
+            [clojure.core.async :refer [go <!]]))
 
 (defmulti execute-operation op-type)
 
@@ -16,11 +17,18 @@
         order-done? #(= (ord/state %) :done)]
     (poll-until fetch-order order-done? (make-duration 1 "s"))))
 
+(defn make-withdraw-intent [intent recipient]
+  (merge intent {:recipient recipient}))
+
 (defmethod execute-operation :withdraw [operation]
   (let [withdraw (execute-withdraw (exchange operation) (intent operation))
-        fetch-withdraw #(transfer (exchange operation) (trans/side withdraw) (trans/id withdraw))
-        withdraw-done? #(= (trans/state %) :done)]
-    (poll-until fetch-withdraw withdraw-done? (make-duration 1 "s"))))
+        fetch-withdraw #(transfer (exchange operation) :withdraw :id (trans/id withdraw))
+        transfer-done? #(= (trans/state %) :done)
+        fetch-deposit #(transfer (:recipient (intent operation)) :deposit :txid %)]
+    (go (->> (<! (poll-until fetch-withdraw transfer-done? (make-duration 1 "s")))
+             (trans/txid)
+             (partial fetch-deposit)
+             (#(poll-until % transfer-done? (make-duration 1 "s")))))))
 
 (defn- is-signal? [signal]
   (and (some? (execute-type signal))
