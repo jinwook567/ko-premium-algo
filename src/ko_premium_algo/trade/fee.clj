@@ -1,5 +1,6 @@
 (ns ko-premium-algo.trade.fee
-  (:refer-clojure :exclude [type]))
+  (:refer-clojure :exclude [type])
+  (:require [ko-premium-algo.lib.numeric :refer [precise]]))
 
 (defn make-fee [type value]
   {:type type :value value})
@@ -12,5 +13,5 @@
 
 (defn coerce-fee [fee n]
   (if (= (type fee) :rate)
-    (* (- 1 (value fee)) n)
-    (- n (value fee))))
+    ((precise *) (- 1 (value fee)) n)
+    ((precise -) n (value fee))))
