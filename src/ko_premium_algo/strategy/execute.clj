@@ -19,7 +19,7 @@
 (defmethod execute-operation :withdraw [operation]
   (let [withdraw (execute-withdraw (exchange operation) (intent operation))
         fetch-withdraw #(transfer (exchange operation) (trans/side withdraw) (trans/id withdraw))
-        withdraw-done? #(= (trans/state %) "DONE")]
+        withdraw-done? #(= (trans/state %) :done)]
     (poll-until fetch-withdraw withdraw-done? (make-duration 1 "s"))))
 
 (defn- is-signal? [signal]

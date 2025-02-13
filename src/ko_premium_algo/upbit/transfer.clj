@@ -17,6 +17,23 @@
             [ko-premium-algo.lib.numeric :refer [str->num]]
             [ko-premium-algo.lib.async :refer [sequential]]))
 
+(defn- withdraw-status [code]
+  (cond
+    (= code "DONE") :done
+    (= code "CANCELLED") :cancelled
+    (contains? #{"REJECTED" "FAILED"} code) :error
+    :else :open))
+
+(defn- deposit-status [code]
+  (cond
+    (= code "ACCEPTED") :done
+    (= code "REJECTED") :error
+    (contains? #{"REFUNDED" "CANCELLED"} code) :cancelled
+    :else :open))
+
+(defn- status [code withdraw?]
+  (if withdraw? (withdraw-status code) (deposit-status code)))
+
 (defn- response->transfer [response]
   (make-transfer (get response "uuid")
                  (get response "txid")
@@ -26,7 +43,7 @@
                                          (get response "net_type"))
                               (get response "amount"))
                  (iso8601->time (get response "created_at"))
-                 (get response "state")))
+                 (status (get response "state") (= :withdraw (keyword (get response "type"))))))
 
 (defn execute-withdraw [intent]
   (let [request (merge {:currency (asset (unit intent))

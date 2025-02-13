@@ -52,14 +52,20 @@
   (let [info (terms-info)]
     (map #(get info (unit->key %)) units)))
 
-(defn- status [code]
+(defn- deposit-status [code]
   (cond
-    (= code 2) "WAITING"
-    (= code 4) "PROCESSING"
-    (= code 6) "DONE"
-    (= code 5) "FAILED"
-    (= code 1) "CANCELLED"
-    (= code 3) "REJECTED"))
+    (= code 1) :done
+    (contains? #{2 6 7} code) :error
+    :else :open))
+
+(defn- withdraw-status [code]
+  (cond
+    (= code 6) :done
+    (= code 3) :error
+    :else :open))
+
+(defn- status [code withdraw?]
+  (if withdraw? (withdraw-status code) (deposit-status code)))
 
 (defn transfer [side id-type id]
   (let [response-property (case id-type
@@ -80,7 +86,7 @@
                                                   (get % "network"))
                                        (str->num (get % "amount")))
                           (millis->time (get % "insertTime"))
-                          (status (get % "status")))))))
+                          (status (get % "status") (= side :withdraw)))))))
 
 (defn execute-withdraw [intent]
   (->> (client/post "https://api.binance.com/sapi/v1/capital/withdraw/apply"
