@@ -9,3 +9,11 @@
 
 (defmethod ticker :upbit [_ & args]
   (apply upbit/ticker args))
+
+(defmulti candle-ticker (fn [type & _] type))
+
+(defmethod candle-ticker :binance [_ & args]
+  (apply binance/candle-ticker args))
+
+(defmethod candle-ticker :upbit [_ & args]
+  (apply upbit/candle-ticker args))
