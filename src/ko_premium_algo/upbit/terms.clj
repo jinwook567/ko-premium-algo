@@ -15,7 +15,7 @@
             [cheshire.core :as json]))
 
 (defn- make-side-terms [response side]
-  (make-terms (make-fee :rate (str->num (get response (str side "_fee"))))
+  (make-terms (make-fee :rate :additional (str->num (get response (str side "_fee"))))
               (make-limits (make-range 0 Float/POSITIVE_INFINITY 0.00000001)
                            (make-range 0 Float/POSITIVE_INFINITY (get-in response ["market" side "price_unit"]))
                            (make-range (str->num (get-in response ["market" side "min_total"]))

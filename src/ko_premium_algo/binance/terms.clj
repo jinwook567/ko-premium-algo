@@ -20,7 +20,7 @@
 
 (defn- fee [markets]
   (let [info (fee-info)]
-    (map #(make-fee :rate (str->num (get info (m/symbol %)))) markets)))
+    (map #(make-fee :rate :inclusive (str->num (get info (m/symbol %)))) markets)))
 
 (defn- make-qty-range [filters]
   (let [qty-filter (some #(when (= (get % "filterType") "LOT_SIZE") %) filters)]

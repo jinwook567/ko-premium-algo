@@ -27,7 +27,7 @@
     (make-unit (first parts) (second parts))))
 
 (defn- network->terms [network]
-  (make-terms (make-fee :fixed (str->num (get network "withdrawFee")))
+  (make-terms (make-fee :fixed :inclusive (str->num (get network "withdrawFee")))
               (make-limits (make-range (str->num (get network "withdrawMin"))
                                        (str->num (get network "withdrawMax"))
                                        (when (= (str->num (get network "withdrawIntegerMultiple")) 0)
