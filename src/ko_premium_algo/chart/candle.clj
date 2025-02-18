@@ -22,3 +22,6 @@
 
 (defn map->interval [interval-map]
   (keyword (str (:value interval-map) (:unit interval-map))))
+
+(defn roc [candle]
+  (/ (- (close candle) (open candle)) (open candle)))
