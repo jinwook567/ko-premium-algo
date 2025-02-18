@@ -20,4 +20,5 @@
                           (get % "high_price")
                           (get % "opening_price")
                           (get % "trade_price")
-                          (get % "acc_trade_volume_24h")))))
+                          (get % "acc_trade_volume_24h")
+                          (get % "acc_trade_price_24h")))))

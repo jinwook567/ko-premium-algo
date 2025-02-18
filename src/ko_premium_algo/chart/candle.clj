@@ -1,7 +1,7 @@
 (ns ko-premium-algo.chart.candle)
 
-(defn make-candle [low high open close volumn]
-  {:low low :high high :open open :close close :volumn volumn})
+(defn make-candle [low high open close volumn trading-value]
+  {:low low :high high :open open :close close :volumn volumn :trading-value trading-value})
 
 (defn low [candle] (:low candle))
 
@@ -12,6 +12,8 @@
 (defn close [candle] (:close candle))
 
 (defn volumn [candle] (:volumn candle))
+
+(defn trading-value [candle] (:trading-value candle))
 
 (def interval #{:1s :1m :5m :30m :1h :1d :1w})
 

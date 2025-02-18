@@ -23,7 +23,8 @@
                           (get % "highPrice")
                           (get % "openPrice")
                           (get % "lastPrice")
-                          (get % "volumn")))))
+                          (get % "volumn")
+                          (get % "quoteVolume")))))
 
 (defn candle-ticker [markets]
   (flatten (pmap base-candle-ticker (partition-all 400 markets))))

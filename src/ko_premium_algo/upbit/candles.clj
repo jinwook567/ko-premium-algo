@@ -30,7 +30,8 @@
                            (get % "high_price")
                            (get % "opening_price")
                            (get % "trade_price")
-                           (get % "candle_acc_trade_volume")))))
+                           (get % "candle_acc_trade_volume")
+                           (get % "candle_acc_trade_price")))))
 
 (defn candles [market interval to count]
   (flatten (pmap #(base-candles market interval to %) (partition-by-size count 200))))
