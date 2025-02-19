@@ -15,9 +15,9 @@
   (:value fee))
 
 (defn net [fee n]
-  (if (= (type fee) :rate)
-    (* (- 1 (value fee)) n)
-    (- n (value fee))))
+  (case (type fee)
+    :rate (* (- 1 (value fee)) n)
+    :fixed (- n (value fee))))
 
 (defn deduct [fee n]
   (case (deduction fee)
