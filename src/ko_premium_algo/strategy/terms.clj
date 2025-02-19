@@ -6,7 +6,8 @@
    [ko-premium-algo.trade.limits :refer [qty-range amount-range]]
    [ko-premium-algo.wallet.limits :as wallet-limit :refer [can-transfer? actions]]
    [ko-premium-algo.wallet.terms :as wallet-terms]
-   [ko-premium-algo.lib.range :refer [min max coerce-limit coerce-step step]]))
+   [ko-premium-algo.lib.range :refer [min max coerce-limit coerce-step step]]
+   [ko-premium-algo.lib.numeric :refer [safe-div]]))
 
 (defn coerce-range [range n]
   (if (> (min range) n)
@@ -18,7 +19,7 @@
   (->> amount
        (gross (fee terms))
        (coerce-range (amount-range (limits terms)))
-       (#(/ % price))
+       (#(safe-div % price))
        (coerce-range (qty-range (limits terms)))))
 
 (defn withdraw-qty [base-terms quote-terms qty]

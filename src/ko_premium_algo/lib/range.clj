@@ -3,7 +3,7 @@
   (:require [ko-premium-algo.lib.numeric :refer [number is-number?]]))
 
 (defn make-range [min max step]
-  {:min (number min) :max (number max) :step (number step)})
+  {:min (number min) :max (number max) :step (when (some? step) (number step))})
 
 (defn min [range]
   (:min range))

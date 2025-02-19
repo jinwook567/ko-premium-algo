@@ -23,7 +23,7 @@
                           (get % "highPrice")
                           (get % "openPrice")
                           (get % "lastPrice")
-                          (get % "volumn")
+                          (get % "volume")
                           (get % "quoteVolume")))))
 
 (defn candle-ticker [markets]
