@@ -1,11 +1,12 @@
-(ns ko-premium-algo.trade.intent)
+(ns ko-premium-algo.trade.intent
+  (:require [ko-premium-algo.lib.numeric :refer [number]]))
 
 (def side-candidates
   #{:bid :ask})
 
 (defn make-intent [market side qty price]
   (assert (side-candidates side) "Invalid side")
-  {:market market :qty qty :price price :side side})
+  {:market market :qty (number qty) :price (number price) :side side})
 
 (defn market [intent]
   (:market intent))

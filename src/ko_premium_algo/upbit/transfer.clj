@@ -14,7 +14,6 @@
             [cheshire.core :as json]
             [clojure.core.async :refer [go-loop <! timeout go]]
             [ko-premium-algo.lib.file :refer [make-file-manager]]
-            [ko-premium-algo.lib.numeric :refer [str->num]]
             [ko-premium-algo.lib.async :refer [sequential]]))
 
 (defn- withdraw-status [code]
@@ -91,8 +90,8 @@
                    {:headers (auth/make-auth-header {:currency (asset unit) :net_type (method unit)})
                     :query-params {:currency (asset unit) :net_type (method unit)}})
        (#(json/parse-string (:body %)))
-       (#(make-terms (make-fee :fixed :inclusive (str->num (get-in % ["currency" "withdraw_fee"])))
-                     (make-limits (make-range (str->num (get-in % ["withdraw_limit" "minimum"]))
+       (#(make-terms (make-fee :fixed :inclusive (get-in % ["currency" "withdraw_fee"]))
+                     (make-limits (make-range (get-in % ["withdraw_limit" "minimum"])
                                               Float/POSITIVE_INFINITY
                                               (decimal-step (get-in % ["withdraw_limit" "fixed"])))
                                   (set (map keyword (get-in % ["currency" "wallet_support"]))))))))

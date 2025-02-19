@@ -1,7 +1,13 @@
-(ns ko-premium-algo.chart.candle)
+(ns ko-premium-algo.chart.candle
+  (:require [ko-premium-algo.lib.numeric :refer [number]]))
 
 (defn make-candle [low high open close volumn trading-value]
-  {:low low :high high :open open :close close :volumn volumn :trading-value trading-value})
+  {:low (number low)
+   :high (number high)
+   :open (number open)
+   :close (number close)
+   :volumn (number volumn)
+   :trading-value (number trading-value)})
 
 (defn low [candle] (:low candle))
 

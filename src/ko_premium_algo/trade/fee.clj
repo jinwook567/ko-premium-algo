@@ -1,9 +1,9 @@
 (ns ko-premium-algo.trade.fee
   (:refer-clojure :exclude [type])
-  (:require [ko-premium-algo.lib.numeric :refer [precise]]))
+  (:require [ko-premium-algo.lib.numeric :refer [number]]))
 
 (defn make-fee [type deduction value]
-  {:type type :deduction deduction :value value})
+  {:type type :deduction deduction :value (number value)})
 
 (defn type [fee]
   (:type fee))
@@ -16,8 +16,8 @@
 
 (defn net [fee n]
   (if (= (type fee) :rate)
-    ((precise *) (- 1 (value fee)) n)
-    ((precise -) n (value fee))))
+    (* (- 1 (value fee)) n)
+    (- n (value fee))))
 
 (defn deduct [fee n]
   (case (deduction fee)

@@ -10,7 +10,7 @@
   (->> (map symbol markets)
        (#(client/get "https://api.binance.com/api/v3/ticker/price" {:query-params {"symbols" (coll->query %)}}))
        (#(json/parse-string (:body %)))
-       (map #(make-ticker %1 (Double/parseDouble (get %2 "price"))) markets)))
+       (map #(make-ticker %1 (get %2 "price")) markets)))
 
 (defn ticker [markets]
   (flatten (pmap base-ticker (partition-all 400 markets))))

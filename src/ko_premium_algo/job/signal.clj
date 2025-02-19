@@ -7,7 +7,6 @@
             [ko-premium-algo.wallet.unit :refer [make-unit]]
             [ko-premium-algo.strategy.terms :refer [order-qty withdraw-qty]]
             [ko-premium-algo.job.traverse :refer [traverse-edge]]
-            [ko-premium-algo.lib.numeric :refer [precise]]
             [ko-premium-algo.gateway.transfer :refer [deposit-address]]
             [ko-premium-algo.strategy.execute :refer [make-withdraw-intent]]))
 
@@ -20,7 +19,7 @@
                             (:asset (start edge))
                             (:symbol (metadata edge)))
                (:type (metadata edge))
-               (order-qty (:terms (metadata edge)) (:price (metadata edge)) ((precise *) (:price (metadata edge)) qty))
+               (order-qty (:terms (metadata edge)) (:price (metadata edge)) (* (:price (metadata edge)) qty))
                (:price (metadata edge))))
 
 (defn- bid-edge->intent [edge qty]

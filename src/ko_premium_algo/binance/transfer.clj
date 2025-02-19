@@ -10,7 +10,6 @@
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
             [ko-premium-algo.wallet.address :refer [make-address primary-address secondary-address]]
             [ko-premium-algo.lib.time :refer [millis->time]]
-            [ko-premium-algo.lib.numeric :refer [str->num]]
             [cheshire.core :as json]
             [clojure.string :as string]
             [clojure.set :refer [intersection]]
@@ -27,11 +26,11 @@
     (make-unit (first parts) (second parts))))
 
 (defn- network->terms [network]
-  (make-terms (make-fee :fixed :inclusive (str->num (get network "withdrawFee")))
-              (make-limits (make-range (str->num (get network "withdrawMin"))
-                                       (str->num (get network "withdrawMax"))
-                                       (when (= (str->num (get network "withdrawIntegerMultiple")) 0)
-                                         (str->num (get network "withdrawIntegerMultiple"))))
+  (make-terms (make-fee :fixed :inclusive (get network "withdrawFee"))
+              (make-limits (make-range (get network "withdrawMin")
+                                       (get network "withdrawMax")
+                                       (when (not= (get network "withdrawIntegerMultiple") "0")
+                                         (get network "withdrawIntegerMultiple")))
                            (true-keys {:deposit (get network "depositEnable")
                                        :withdraw (get network "withdrawEnable")}))))
 
@@ -84,7 +83,7 @@
                           (make-intent (get % "address")
                                        (make-unit (get % "coin")
                                                   (get % "network"))
-                                       (str->num (get % "amount")))
+                                       (get % "amount"))
                           (millis->time (get % "insertTime"))
                           (status (get % "status") (= side :withdraw)))))))
 

@@ -1,7 +1,8 @@
-(ns ko-premium-algo.wallet.intent)
+(ns ko-premium-algo.wallet.intent
+  (:require [ko-premium-algo.lib.numeric :refer [number]]))
 
 (defn make-intent [address unit qty]
-  {:address address  :unit unit :qty qty})
+  {:address address  :unit unit :qty (number qty)})
 
 (defn address [intent]
   (:address intent))

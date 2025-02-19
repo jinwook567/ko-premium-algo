@@ -5,7 +5,6 @@
             [cheshire.core :as json]
             [clj-http.client :as client]
             [ko-premium-algo.trade.market :as m]
-            [ko-premium-algo.lib.numeric :refer [str->num]]
             [ko-premium-algo.upbit.auth :as auth]))
 
 (defn- order-state [upbit-state]
@@ -20,9 +19,9 @@
   (make-order (get response "uuid")
               (make-intent market
                            (keyword (get response "side"))
-                           (str->num (get response "volume"))
-                           (str->num (get response "price")))
-              (str->num (get response "executed_volume"))
+                           (get response "volume")
+                           (get response "price"))
+              (get response "executed_volume")
               (iso8601->time (get response "created_at"))
               (order-state (get response "state"))))
 
