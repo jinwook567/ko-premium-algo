@@ -1,6 +1,6 @@
 (ns ko-premium-algo.lib.range
   (:refer-clojure :exclude [min max])
-  (:require [ko-premium-algo.lib.numeric :refer [number is-number?]]))
+  (:require [ko-premium-algo.lib.numeric :refer [number is-number? trim-zeros]]))
 
 (defn make-range [min max step]
   {:min (number min) :max (number max) :step (when (some? step) (number step))})
@@ -37,8 +37,8 @@
                      (coerce-step step (number n) floor?)
                      (cond
                        (satisfy-step? step n) n
-                       floor? (- n (mod n step))
-                       :else (+ (coerce-step step n) step)))))
+                       floor? (trim-zeros (- n (mod n step)))
+                       :else (trim-zeros (+ (coerce-step step n) step))))))
 
 (defn decimal-step [n]
   (apply / (cons 1 (map (fn [_] 10) (range n)))))

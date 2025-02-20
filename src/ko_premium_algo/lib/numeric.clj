@@ -19,3 +19,6 @@
                  (div (number x) (number y) scale)
                  (/ x y)))
   ([x y] (safe-div x y 20)))
+
+(defn trim-zeros [number]
+  (if (Double/isInfinite number) number (.stripTrailingZeros number)))
