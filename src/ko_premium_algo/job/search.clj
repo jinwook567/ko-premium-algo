@@ -54,11 +54,13 @@
 (defn exchange-edges [exchange asset trading-val-pct trading-val]
   (let [market-candle-list (market-candle-list exchange)
         asset-filter (make-asset-filter base-asset asset)
-        trading-val-pct-filter (make-trading-val-pct-filter (map trading-value market-candle-list) trading-val-pct)
-        trading-val-filter (make-trading-val-filter trading-val)
-        valid? (fn [market-candle]
-                 (every? #(% market-candle) [asset-filter trading-val-pct-filter trading-val-filter]))]
-    (make-exchange-edges exchange (filter valid? market-candle-list))))
+        trading-val-pct-filter #(make-trading-val-pct-filter (map trading-value %) trading-val-pct)
+        trading-val-filter (make-trading-val-filter trading-val)]
+    (->> market-candle-list
+         (filter asset-filter)
+         (#(filter (trading-val-pct-filter %) %))
+         (filter trading-val-filter)
+         (make-exchange-edges exchange))))
 
 (defn link-exchange-edges [exchange-edges]
   (concat exchange-edges
