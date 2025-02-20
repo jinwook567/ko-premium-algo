@@ -9,7 +9,7 @@
             [ko-premium-algo.wallet.unit :refer [make-unit asset method]]
             [ko-premium-algo.wallet.transfer :refer [make-transfer]]
             [ko-premium-algo.wallet.address :refer [make-address primary-address secondary-address]]
-            [ko-premium-algo.lib.time :refer [millis->time]]
+            [ko-premium-algo.lib.time :refer [millis->time parse]]
             [cheshire.core :as json]
             [clojure.string :as string]
             [clojure.set :refer [intersection]]
@@ -84,7 +84,7 @@
                                        (make-unit (get % "coin")
                                                   (get % "network"))
                                        (get % "amount"))
-                          (millis->time (get % "insertTime"))
+                          (if (= side :deposit) (millis->time (get % "insertTime")) (parse (get % "applyTime") "yyyy-MM-dd HH:mm:ss"))
                           (status (get % "status") (= side :withdraw)))))))
 
 (defn execute-withdraw [intent]

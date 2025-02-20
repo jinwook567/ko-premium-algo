@@ -1,9 +1,15 @@
 (ns ko-premium-algo.lib.time
-  (:import [java.time Instant]
-           [java.time Duration]))
+  (:import [java.time Instant ZoneId LocalDateTime Duration]
+           [java.time.format DateTimeFormatter]))
 
 (defn now []
   (Instant/now))
+
+(defn parse [time-str pattern]
+  (-> time-str
+      (LocalDateTime/parse (DateTimeFormatter/ofPattern pattern))
+      (.atZone (ZoneId/of "UTC"))
+      .toInstant))
 
 (defn make-duration [value unit]
   (cond
