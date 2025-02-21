@@ -16,10 +16,8 @@
 (defn coerce-query [query]
   (into (sorted-map) (coerce-decimal-notation query)))
 
-(coerce-query {:market {:base-asset "BTC", :quote-asset "CELR", :symbol "CELRBTC"}, :price 1.3E-7, :qty 833.0, :side :ask})
-
 (defn- make-base-payload []
-  {:timestamp (time->millis (now)) :recvWindow 3000})
+  {:timestamp (time->millis (now)) :recvWindow 5000})
 
 (defn- make-signature [query]
   (codecs/bytes->hex (hash (client/generate-query-string (coerce-query query)) {:alg :hmac+sha256 :key BINANCE-SECRET-KEY})))
