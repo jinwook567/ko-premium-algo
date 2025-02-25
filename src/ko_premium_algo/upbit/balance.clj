@@ -9,4 +9,4 @@
                    {:headers (make-auth-header)})
        (#(json/parse-string (:body %)))
        (some #(when (= (get % "currency") asset) (get % "balance")))
-       number))
+       (#(if (some? %) (number %) 0))))

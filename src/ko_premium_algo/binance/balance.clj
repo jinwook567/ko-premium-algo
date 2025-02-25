@@ -10,6 +10,4 @@
                      :query-params (auth/make-payload {:asset asset})})
        (#(json/parse-string (:body %)))
        (#(get (first %) "free"))
-       number))
-
-(balance "USDT")
+       (#(if (some? %) (number %) 0))))
