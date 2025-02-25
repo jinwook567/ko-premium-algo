@@ -61,13 +61,13 @@
   (let [request (case id-type
                   :id {:uuid id}
                   :txid {:txid id})]
-    (->> (client/get (if (= side :deposit)
-                       "https://api.upbit.com/v1/deposit"
-                       "https://api.upbit.com/v1/withdraw")
-                     {:headers (auth/make-auth-header request)
-                      :query-params request})
-         (#(json/parse-string (:body %)))
-         (#(response->transfer %)))))
+    (try (->> (client/get (if (= side :deposit)
+                            "https://api.upbit.com/v1/deposit"
+                            "https://api.upbit.com/v1/withdraw")
+                          {:headers (auth/make-auth-header request)
+                           :query-params request})
+              (#(json/parse-string (:body %)))
+              (#(response->transfer %))) (catch Exception _ nil))))
 
 (def ^:private manager
   (make-file-manager ".cache/upbit.transfer.edn"))

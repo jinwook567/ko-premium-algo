@@ -77,15 +77,15 @@
                       :query-params (auth/make-payload)})
          (#(json/parse-string (:body %)))
          (some #(when (= (get % response-property) id) %))
-         (#(make-transfer (get % "id")
-                          (get % "txId")
-                          side
-                          (make-intent (get % "address")
-                                       (make-unit (get % "coin")
-                                                  (get % "network"))
-                                       (get % "amount"))
-                          (if (= side :deposit) (millis->time (get % "insertTime")) (parse (get % "applyTime") "yyyy-MM-dd HH:mm:ss"))
-                          (status (get % "status") (= side :withdraw)))))))
+         (#(when (some? %) (make-transfer (get % "id")
+                                          (get % "txId")
+                                          side
+                                          (make-intent (get % "address")
+                                                       (make-unit (get % "coin")
+                                                                  (get % "network"))
+                                                       (get % "amount"))
+                                          (if (= side :deposit) (millis->time (get % "insertTime")) (parse (get % "applyTime") "yyyy-MM-dd HH:mm:ss"))
+                                          (status (get % "status") (= side :withdraw))))))))
 
 (defn execute-withdraw [intent]
   (->> (client/post "https://api.binance.com/sapi/v1/capital/withdraw/apply"
