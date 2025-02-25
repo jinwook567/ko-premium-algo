@@ -17,7 +17,7 @@
   (into (sorted-map) (coerce-decimal-notation query)))
 
 (defn- make-base-payload []
-  {:timestamp (time->millis (now)) :recvWindow 5000})
+  {:timestamp (time->millis (now)) :recvWindow 30000})
 
 (defn- make-signature [query]
   (codecs/bytes->hex (hash (client/generate-query-string (coerce-query query)) {:alg :hmac+sha256 :key BINANCE-SECRET-KEY})))
